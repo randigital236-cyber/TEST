@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Register - RND Staking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: radial-gradient(ellipse at center, rgba(46, 204, 113, 0.05), transparent 70%);
+        }
+        .login-card {
+            background: rgba(19, 34, 55, 0.92);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(46, 204, 113, 0.12);
+            border-radius: 24px;
+            padding: 40px 35px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        .login-card:hover {
+            border-color: rgba(46, 204, 113, 0.25);
+            transform: translateY(-3px);
+        }
+        .login-card .logo {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+        }
+        .login-card .logo i {
+            color: #2ecc71;
+        }
+        .login-card .subtitle {
+            color: #8899bb;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .login-card .form-label {
+            color: #8899bb;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        .login-card .form-control {
+            background: rgba(8, 14, 26, 0.8);
+            border: 1px solid rgba(46, 204, 113, 0.12);
+            color: #f0f4ff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .login-card .form-control:focus {
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.12);
+        }
+        .login-card .form-control::placeholder {
+            color: #556688;
+        }
+        .login-card .btn-register {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .login-card .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(46, 204, 113, 0.3);
+        }
+        .login-card .btn-register:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-card .login-link {
+            color: #8899bb;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 16px;
+        }
+        .login-card .login-link a {
+            color: #2ecc71;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .login-card .login-link a:hover {
+            text-decoration: underline;
+        }
+        .password-hint {
+            color: #556688;
+            font-size: 0.7rem;
+            margin-top: 4px;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+        .toast-custom {
+            background: rgba(19, 34, 55, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(46, 204, 113, 0.15);
+            border-radius: 16px;
+            padding: 14px 20px;
+            color: #f0f4ff;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.4s ease;
+            margin-bottom: 10px;
+        }
+        .toast-custom.error { border-left: 4px solid #ef4444; }
+        .toast-custom.success { border-left: 4px solid #2ecc71; }
+        .toast-custom i { font-size: 1.4rem; }
+        .toast-custom .toast-msg { flex: 1; font-size: 0.85rem; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 480px) {
+            .login-card { padding: 30px 20px; }
+            .login-card .logo { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="text-center mb-4">
+                <div class="logo">
+                    <i class="bi bi-currency-bitcoin me-2"></i>RND Staking
+                </div>
+                <p class="subtitle">Create your account and start earning</p>
+            </div>
+
+            <form id="registerForm">
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="regName" class="form-control" placeholder="Enter your full name" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" id="regEmail" class="form-control" placeholder="Enter your email" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" id="regPassword" class="form-control" placeholder="Min 6 characters" required minlength="6">
+                    <div class="password-hint">Minimum 6 characters</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Referral Code (Optional)</label>
+                    <input type="text" id="regReferral" class="form-control" placeholder="Enter referral code if any">
+                </div>
+                <button type="submit" class="btn-register" id="registerBtn">
+                    <i class="bi bi-person-plus me-2"></i>Create Account
+                </button>
+            </form>
+
+            <div class="login-link">
+                Already have an account? <a href="login.html">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+            "firebase/database": "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"
+        }
+    }
+    </script>
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
+        import { getDatabase, ref, get, set, update, runTransaction } from "firebase/database";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzHmIimieea8H9KzYFDSqD0lGOCZjxHYw",
+            authDomain: "myapp-ee226.firebaseapp.com",
+            databaseURL: "https://myapp-ee226-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "myapp-ee226",
+            storageBucket: "myapp-ee226.firebasestorage.app",
+            messagingSenderId: "272405753135",
+            appId: "1:272405753135:web:598ec27c28bcf6b04105da",
+            measurementId: "G-D5KYTMJ5WK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-custom ${type}`;
+            const icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
+            toast.innerHTML = `<i class="bi ${icon}"></i><span class="toast-msg">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // If already logged in, redirect to dashboard
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // Register Form
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const referralCode = document.getElementById('regReferral').value.trim().toUpperCase();
+            const btn = document.getElementById('registerBtn');
+
+            if (!name || !email || !password) {
+                showToast('Please fill all required fields', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+
+            try {
+                // Check if email already registered
+                const usersSnap = await get(ref(db, 'users'));
+                let emailExists = false;
+                if (usersSnap.exists()) {
+                    const users = usersSnap.val();
+                    for (let uid in users) {
+                        if (users[uid].email === email) {
+                            emailExists = true;
+                            break;
+                        }
+                    }
+                }
+                if (emailExists) {
+                    showToast('Email already registered! Please login.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Create Account';
+                    return;
+                }
+
+                // Create user
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Generate referral code
+                const refCode = 'RND' + Math.random().toString(36).substring(2, 8).toUpperCase();
+
+                // Check referral
+                let referredBy = null;
+                let referrerUid = null;
+                let referrerData = null;
+
+                if (referralCode) {
+                    if (usersSnap.exists()) {
+                        const users = usersSnap.val();
+                        for (let uid in users) {
+                            if (users[uid].referralCode === referralCode) {
+                                referredBy = referralCode;
+                                referrerUid = uid;
+                                referrerData = users[uid];
+                                break;
+                            }
+                        }
+                    }
+                    if (!referredBy) {
+                        showToast('Invalid referral code. You can still register.', 'error');
+                    }
+                }
+
+                // Create user profile
+                const userData = {
+                    uid: user.uid,
+                    name: name,
+                    email: email,
+                    username: email.split('@')[0] + Math.random().toString(36).substring(2, 5),
+                    referralCode: refCode,
+                    referredBy: referredBy,
+                    rank: 'Member',
+                    depositWallet: 0,
+                    incomeWallet: 0,
+                    rewardWallet: 0,
+                    referralWallet: 0,
+                    rndWallet: 0,
+                    lockedRND: 0,
+                    releaseWallet: 0,
+                    totalReleased: 0,
+                    activePackages: 0,
+                    totalStake: 0,
+                    teamBusiness: 0,
+                    totalReferrals: 0,
+                    downline: 0,
+                    level1Earnings: 0,
+                    level2Earnings: 0,
+                    level3Earnings: 0,
+                    level4Earnings: 0,
+                    level5Earnings: 0,
+                    referralEarnings: 0,
+                    teamStructure: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0 },
+                    earnedRewards: {},
+                    createdAt: Date.now(),
+                    lastLogin: Date.now(),
+                    packages: {},
+                    transactions: {},
+                    notifications: {},
+                    transferHistory: [],
+                    banned: false
+                };
+
+                await set(ref(db, 'users/' + user.uid), userData);
+
+                // Update referrer's total referrals
+                if (referredBy && referrerUid) {
+                    await runTransaction(ref(db, 'users/' + referrerUid), (currentData) => {
+                        if (!currentData) return { ...currentData };
+                        currentData.totalReferrals = (currentData.totalReferrals || 0) + 1;
+                        return currentData;
+                    });
+
+                    // Add notification to referrer
+                    const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                    await update(ref(db, 'users/' + referrerUid + '/notifications/' + notifId), {
+                        title: '🎉 New Referral!',
+                        message: `${name} joined using your referral code!`,
+                        read: false,
+                        timestamp: Date.now(),
+                        date: new Date().toDateString(),
+                        type: 'referral'
+                    });
+                }
+
+                showToast('Registration successful! Please login.', 'success');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Create Account';
+
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+
+            } catch (error) {
+                let msg = 'Registration failed. Please try again.';
+                if (error.code === 'auth/email-already-in-use') msg = 'Email already in use. Please login.';
+                else if (error.code === 'auth/weak-password') msg = 'Password is too weak. Use at least 6 characters.';
+                showToast(msg, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Create Account';
+            }
+        });
+    </script>
+</body>
+</html>

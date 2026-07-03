@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RND Staking - Home</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        .hero-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            padding: 40px 20px;
+            background: radial-gradient(ellipse at center, rgba(46, 204, 113, 0.05), transparent 70%);
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #fff;
+        }
+        .hero-section h1 span {
+            color: #2ecc71;
+        }
+        .hero-section .lead {
+            color: #8899bb;
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 16px auto;
+        }
+        .hero-section .btn-start {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            padding: 14px 40px;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .hero-section .btn-start:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(46, 204, 113, 0.3);
+            color: #fff;
+        }
+        .hero-section .btn-outline {
+            border: 2px solid rgba(46, 204, 113, 0.3);
+            color: #a0b8d0;
+            padding: 14px 40px;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 12px;
+        }
+        .hero-section .btn-outline:hover {
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            margin: 50px auto 0;
+        }
+        .feature-card {
+            background: rgba(19, 34, 55, 0.6);
+            border: 1px solid rgba(46, 204, 113, 0.06);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            border-color: rgba(46, 204, 113, 0.15);
+            transform: translateY(-5px);
+        }
+        .feature-card .icon {
+            font-size: 2.5rem;
+            color: #2ecc71;
+            margin-bottom: 12px;
+        }
+        .feature-card h5 {
+            color: #fff;
+            font-weight: 700;
+        }
+        .feature-card p {
+            color: #8899bb;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        @media (max-width: 768px) {
+            .hero-section h1 { font-size: 2.2rem; }
+            .features { grid-template-columns: 1fr; gap: 16px; }
+            .hero-section .btn-outline { margin-left: 0; margin-top: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-currency-bitcoin me-2"></i>RND Staking
+            </a>
+            <div>
+                <a href="login.html" class="btn-outline-custom me-2" style="padding:6px 18px;font-size:0.85rem;">Login</a>
+                <a href="register.html" class="btn-primary-custom" style="padding:6px 18px;font-size:0.85rem;">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div>
+            <h1>Welcome to <span>RND Staking</span></h1>
+            <p class="lead">Stake, Earn, and Grow with RND Network Marketing Platform</p>
+            <div>
+                <a href="register.html" class="btn-start">Get Started</a>
+                <a href="login.html" class="btn-outline">Login</a>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <div class="icon"><i class="bi bi-coin"></i></div>
+                    <h5>Stake & Earn</h5>
+                    <p>Lock your RND and earn daily rewards</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon"><i class="bi bi-people"></i></div>
+                    <h5>Referral System</h5>
+                    <p>Earn up to 5 levels of commissions</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon"><i class="bi bi-trophy"></i></div>
+                    <h5>Rank Rewards</h5>
+                    <p>10 ranks with automatic rewards</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
