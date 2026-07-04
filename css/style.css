@@ -14,7 +14,9 @@ body {
     min-height: 100vh;
 }
 
-a { text-decoration: none; }
+a {
+    text-decoration: none;
+}
 
 /* ============================================================
    🔥 BUTTONS
