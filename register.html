@@ -10,8 +10,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/responsive.css">
     <style>
-        /* All styles inline to avoid missing login.css */
-        .login-container {
+        .register-container {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -19,7 +18,7 @@
             padding: 20px;
             background: radial-gradient(ellipse at center, rgba(46, 204, 113, 0.05), transparent 70%);
         }
-        .login-card {
+        .register-card {
             background: rgba(19, 34, 55, 0.92);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(46, 204, 113, 0.12);
@@ -30,29 +29,29 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             transition: all 0.3s ease;
         }
-        .login-card:hover {
+        .register-card:hover {
             border-color: rgba(46, 204, 113, 0.25);
             transform: translateY(-3px);
         }
-        .login-card .logo {
+        .register-card .logo {
             font-size: 2rem;
             font-weight: 900;
             color: #fff;
         }
-        .login-card .logo i {
+        .register-card .logo i {
             color: #2ecc71;
         }
-        .login-card .subtitle {
+        .register-card .subtitle {
             color: #8899bb;
             font-size: 0.9rem;
             margin-top: 4px;
         }
-        .login-card .form-label {
+        .register-card .form-label {
             color: #8899bb;
             font-weight: 500;
             font-size: 0.85rem;
         }
-        .login-card .form-control {
+        .register-card .form-control {
             background: rgba(8, 14, 26, 0.8);
             border: 1px solid rgba(46, 204, 113, 0.12);
             color: #f0f4ff;
@@ -60,14 +59,14 @@
             border-radius: 12px;
             transition: all 0.3s ease;
         }
-        .login-card .form-control:focus {
+        .register-card .form-control:focus {
             border-color: #2ecc71;
             box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.12);
         }
-        .login-card .form-control::placeholder {
+        .register-card .form-control::placeholder {
             color: #556688;
         }
-        .login-card .btn-register {
+        .register-card .btn-register {
             background: linear-gradient(135deg, #2ecc71, #27ae60);
             border: none;
             color: #fff;
@@ -79,27 +78,27 @@
             transition: all 0.3s ease;
             cursor: pointer;
         }
-        .login-card .btn-register:hover {
+        .register-card .btn-register:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 30px rgba(46, 204, 113, 0.3);
         }
-        .login-card .btn-register:disabled {
+        .register-card .btn-register:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-        .login-card .login-link {
+        .register-card .login-link {
             color: #8899bb;
             font-size: 0.9rem;
             text-align: center;
             margin-top: 16px;
         }
-        .login-card .login-link a {
+        .register-card .login-link a {
             color: #2ecc71;
             font-weight: 600;
             text-decoration: none;
         }
-        .login-card .login-link a:hover {
+        .register-card .login-link a:hover {
             text-decoration: underline;
         }
         .password-hint {
@@ -136,9 +135,15 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        .error-text {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: none;
+        }
         @media (max-width: 480px) {
-            .login-card { padding: 30px 20px; }
-            .login-card .logo { font-size: 1.6rem; }
+            .register-card { padding: 30px 20px; }
+            .register-card .logo { font-size: 1.6rem; }
         }
     </style>
 </head>
@@ -146,8 +151,8 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <div class="login-container">
-        <div class="login-card">
+    <div class="register-container">
+        <div class="register-card">
             <div class="text-center mb-4">
                 <div class="logo">
                     <i class="bi bi-currency-bitcoin me-2"></i>RND Staking
@@ -158,11 +163,12 @@
             <form id="registerForm">
                 <div class="mb-3">
                     <label class="form-label">Full Name</label>
-                    <input type="text" id="regName" class="form-control" placeholder="Enter your full name" required>
+                    <input type="text" id="regName" class="form-control" placeholder="Enter your full name" required autofocus>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Email Address</label>
                     <input type="email" id="regEmail" class="form-control" placeholder="Enter your email" required>
+                    <div class="error-text" id="emailError">Email already registered!</div>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Password</label>
@@ -170,8 +176,9 @@
                     <div class="password-hint">Minimum 6 characters</div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Referral Code (Optional)</label>
-                    <input type="text" id="regReferral" class="form-control" placeholder="Enter referral code if any">
+                    <label class="form-label">Referral ID (Optional)</label>
+                    <input type="text" id="regReferral" class="form-control" placeholder="Enter referral UID if any">
+                    <div class="password-hint" style="color:#556688;">Enter Firebase UID of your referrer</div>
                 </div>
                 <button type="submit" class="btn-register" id="registerBtn">
                     <i class="bi bi-person-plus me-2"></i>Create Account
