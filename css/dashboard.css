@@ -346,3 +346,152 @@
     .welcome-section { padding: 16px; }
     .welcome-section h2 { font-size: 1.1rem; }
 }
+/* ============================================================
+   🔥 RANK PROGRESS CARD
+   ============================================================ */
+.rank-progress-card {
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(251, 191, 36, 0.01));
+    border: 1px solid rgba(251, 191, 36, 0.1);
+    border-radius: 20px;
+    padding: 25px 30px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+}
+
+.rank-progress-card:hover {
+    border-color: rgba(251, 191, 36, 0.2);
+    transform: translateY(-2px);
+}
+
+.rank-progress-card .rank-label {
+    color: #8899bb;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.rank-progress-card .rank-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fbbf24;
+    line-height: 1.2;
+}
+
+.rank-progress-card .rank-badge-small {
+    color: #a0b8d0;
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+.rank-progress-card .rank-reward {
+    color: #2ecc71;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 4px;
+}
+
+.rank-progress-card .rank-current {
+    padding: 10px 0;
+}
+
+.rank-progress-card .rank-next {
+    padding: 10px 0;
+    border-left: 1px solid rgba(251, 191, 36, 0.08);
+    padding-left: 20px;
+}
+
+.rank-progress-card .rank-requirements {
+    padding: 10px 0;
+    border-left: 1px solid rgba(251, 191, 36, 0.08);
+    padding-left: 20px;
+}
+
+.rank-progress-card .req-item {
+    display: flex;
+    justify-content: space-between;
+    color: #a0b8d0;
+    font-size: 0.85rem;
+    padding: 4px 0;
+}
+
+.rank-progress-card .req-item span:last-child {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ----- PROGRESS BAR ----- */
+.progress-container {
+    width: 100%;
+}
+
+.progress-labels {
+    display: flex;
+    justify-content: space-between;
+    color: #8899bb;
+    font-size: 0.8rem;
+    margin-bottom: 6px;
+}
+
+.progress-labels span:last-child {
+    color: #fbbf24;
+    font-weight: 700;
+}
+
+.progress-bar-wrapper {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #fbbf24);
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+
+.progress-details {
+    display: flex;
+    justify-content: space-between;
+    color: #556688;
+    font-size: 0.7rem;
+    margin-top: 6px;
+}
+
+.progress-details span:last-child {
+    color: #8899bb;
+}
+
+/* ----- RESPONSIVE ----- */
+@media (max-width: 768px) {
+    .rank-progress-card {
+        padding: 20px;
+    }
+    .rank-progress-card .rank-name {
+        font-size: 1.4rem;
+    }
+    .rank-progress-card .rank-next,
+    .rank-progress-card .rank-requirements {
+        border-left: none;
+        padding-left: 0;
+        padding-top: 0;
+    }
+    .rank-progress-card .rank-current {
+        padding-bottom: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rank-progress-card {
+        padding: 16px;
+    }
+    .rank-progress-card .rank-name {
+        font-size: 1.2rem;
+    }
+    .rank-progress-card .req-item {
+        font-size: 0.75rem;
+    }
+}
