@@ -1,4 +1,7 @@
-import { auth, db, LOGIN_URL, DASHBOARD_URL } from "./firebase.js";
+// ============================================================
+// 🔥 AUTHENTICATION - REGISTER, LOGIN, LOGOUT
+// ============================================================
+import { auth, db, LOGIN_URL, DASHBOARD_URL, REGISTER_URL } from "./firebase.js";
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
@@ -46,6 +49,20 @@ onAuthStateChanged(auth, async (user) => {
         }
     }
 });
+
+// ============================================================
+// 🔥 VALIDATE UID
+// ============================================================
+async function validateUID(uid) {
+    if (!uid || uid.length < 10) return false;
+    try {
+        const userSnap = await get(ref(db, 'users/' + uid));
+        return userSnap.exists();
+    } catch (error) {
+        console.error('UID Validation Error:', error);
+        return false;
+    }
+}
 
 // ============================================================
 // 🔥 LOGIN
@@ -118,9 +135,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const name = document.getElementById('regName').value.trim();
             const email = document.getElementById('regEmail').value.trim();
             const password = document.getElementById('regPassword').value;
-            const referralCode = document.getElementById('regReferral').value.trim().toUpperCase();
+            const referralUID = document.getElementById('regReferral').value.trim();
             const btn = document.getElementById('registerBtn');
+            const emailError = document.getElementById('emailError');
 
+            // Hide previous errors
+            emailError.style.display = 'none';
+
+            // Validation
             if (!name || !email || !password) {
                 showToast('Please fill all required fields', 'error');
                 return;
@@ -135,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
 
             try {
-                // Check if email already registered
+                // 🔥 Check if email already exists
                 const usersSnap = await get(ref(db, 'users'));
                 let emailExists = false;
                 if (usersSnap.exists()) {
@@ -147,53 +169,41 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
+
                 if (emailExists) {
+                    emailError.style.display = 'block';
                     showToast('Email already registered! Please login.', 'error');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Create Account';
                     return;
                 }
 
-                // Create user
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                // Generate referral code
-                const refCode = 'RND' + Math.random().toString(36).substring(2, 8).toUpperCase();
-
-                // Check referral
-                let referredBy = null;
-                let referrerUid = null;
-
-                if (referralCode) {
-                    if (usersSnap.exists()) {
-                        const users = usersSnap.val();
-                        for (let uid in users) {
-                            if (users[uid].referralCode === referralCode) {
-                                referredBy = referralCode;
-                                referrerUid = uid;
-                                break;
-                            }
-                        }
-                    }
-                    if (!referredBy) {
-                        showToast('Invalid referral code. You can still register.', 'error');
+                // 🔥 Validate Referral UID (if provided)
+                let parentUid = null;
+                if (referralUID) {
+                    const isValid = await validateUID(referralUID);
+                    if (isValid) {
+                        parentUid = referralUID;
+                    } else {
+                        showToast('Invalid Referral UID. You can still register.', 'error');
                     }
                 }
 
-                // Create user profile
+                // 🔥 Create user in Firebase Authentication
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                const uid = user.uid;
+
+                // 🔥 Create user profile in Realtime Database
                 const userData = {
-                    uid: user.uid,
+                    uid: uid,
                     name: name,
                     email: email,
-                    username: email.split('@')[0] + Math.random().toString(36).substring(2, 5),
-                    referralCode: refCode,
-                    referredBy: referredBy,
                     rank: 'Member',
+                    parentUid: parentUid,
                     depositWallet: 0,
                     incomeWallet: 0,
                     rewardWallet: 0,
-                    referralWallet: 0,
                     rndWallet: 0,
                     lockedRND: 0,
                     releaseWallet: 0,
@@ -202,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalStake: 0,
                     teamBusiness: 0,
                     totalReferrals: 0,
-                    downline: 0,
+                    qualifiedDirects: 0,
                     level1Earnings: 0,
                     level2Earnings: 0,
                     level3Earnings: 0,
@@ -220,21 +230,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     banned: false
                 };
 
-                await set(ref(db, 'users/' + user.uid), userData);
+                await set(ref(db, 'users/' + uid), userData);
+                console.log('✅ User registered successfully:', uid);
 
-                // Update referrer's total referrals
-                if (referredBy && referrerUid) {
-                    await runTransaction(ref(db, 'users/' + referrerUid), (currentData) => {
+                // 🔥 Update parent's total referrals
+                if (parentUid) {
+                    await runTransaction(ref(db, 'users/' + parentUid), (currentData) => {
                         if (!currentData) return { ...currentData };
                         currentData.totalReferrals = (currentData.totalReferrals || 0) + 1;
                         return currentData;
                     });
 
-                    // Add notification to referrer
+                    // Add notification to parent
                     const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    await update(ref(db, 'users/' + referrerUid + '/notifications/' + notifId), {
+                    await update(ref(db, 'users/' + parentUid + '/notifications/' + notifId), {
                         title: '🎉 New Referral!',
-                        message: `${name} joined using your referral code!`,
+                        message: `${name} joined using your referral link!`,
                         read: false,
                         timestamp: Date.now(),
                         date: new Date().toDateString(),
@@ -242,19 +253,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
 
-                showToast('Registration successful! Please login.', 'success');
+                showToast('✅ Registration successful! Please login.', 'success');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Create Account';
 
+                // Redirect to login after 2 seconds
                 setTimeout(() => {
                     window.location.href = LOGIN_URL;
-                }, 1500);
+                }, 2000);
 
             } catch (error) {
+                console.error('🔥 Registration Error:', error);
+                
                 let msg = 'Registration failed. Please try again.';
-                if (error.code === 'auth/email-already-in-use') msg = 'Email already in use. Please login.';
-                else if (error.code === 'auth/weak-password') msg = 'Password is too weak. Use at least 6 characters.';
-                showToast(msg, 'error');
+                if (error.code === 'auth/email-already-in-use') {
+                    msg = 'Email already in use. Please login.';
+                    emailError.style.display = 'block';
+                } else if (error.code === 'auth/weak-password') {
+                    msg = 'Password is too weak. Use at least 6 characters.';
+                } else if (error.code === 'auth/invalid-email') {
+                    msg = 'Invalid email address. Please enter a valid email.';
+                } else if (error.code === 'auth/network-request-failed') {
+                    msg = 'Network error. Please check your internet connection.';
+                }
+                
+                showToast('❌ ' + msg, 'error');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-person-plus me-2"></i>Create Account';
             }
@@ -266,10 +289,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     const logoutBtns = document.querySelectorAll('#logoutBtnSidebar, #logoutBtn');
     logoutBtns.forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await signOut(auth);
-            window.location.href = LOGIN_URL;
-        });
+        if (btn) {
+            btn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await signOut(auth);
+                window.location.href = LOGIN_URL;
+            });
+        }
     });
 });
