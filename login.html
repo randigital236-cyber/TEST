@@ -8,10 +8,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/responsive.css">
     <style>
-        /* Extra login styles */
+        /* All styles inline to avoid missing login.css */
         .login-container {
             display: flex;
             align-items: center;
@@ -180,102 +179,7 @@
         }
     }
     </script>
-    <script type="module">
-        import { initializeApp } from "firebase/app";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-        import { getDatabase, ref, get } from "firebase/database";
-
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzHmIimieea8H9KzYFDSqD0lGOCZjxHYw",
-            authDomain: "myapp-ee226.firebaseapp.com",
-            databaseURL: "https://myapp-ee226-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "myapp-ee226",
-            storageBucket: "myapp-ee226.firebasestorage.app",
-            messagingSenderId: "272405753135",
-            appId: "1:272405753135:web:598ec27c28bcf6b04105da",
-            measurementId: "G-D5KYTMJ5WK"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        // Toast function
-        function showToast(message, type = 'error') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast-custom ${type}`;
-            const icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
-            toast.innerHTML = `<i class="bi ${icon}"></i><span class="toast-msg">${message}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
-        }
-
-        // Check if already logged in
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.location.href = 'dashboard.html';
-            }
-        });
-
-        // Login Form
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('loginBtn');
-
-            if (!email || !password) {
-                showToast('Please enter both email and password', 'error');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
-
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-
-                // Check if user exists in database
-                const userSnap = await get(ref(db, 'users/' + user.uid));
-                if (!userSnap.exists()) {
-                    await signOut(auth);
-                    showToast('User profile not found. Please register first.', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
-                    return;
-                }
-
-                const userData = userSnap.val();
-                if (userData.banned === true) {
-                    await signOut(auth);
-                    showToast('Your account has been banned.', 'error');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
-                    return;
-                }
-
-                showToast('Login successful! Redirecting...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'dashboard.html';
-                }, 1000);
-
-            } catch (error) {
-                let msg = 'Login failed. Please check your credentials.';
-                if (error.code === 'auth/user-not-found') msg = 'User not found. Please register first.';
-                else if (error.code === 'auth/wrong-password') msg = 'Incorrect password. Please try again.';
-                else if (error.code === 'auth/too-many-requests') msg = 'Too many attempts. Please try again later.';
-                showToast(msg, 'error');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Login';
-            }
-        });
-    </script>
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
 </body>
 </html>
