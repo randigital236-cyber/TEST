@@ -69,109 +69,164 @@ function formatNumber(num) {
 }
 
 // ============================================================
-// 🔥 RANK LEVELS
+// 🔥 RANK LEVELS (Only these ranks)
 // ============================================================
 const RANK_LEVELS = [
     { id: 'executive', name: 'Executive', business: 3000, reward: 50, direct: 0 },
-    { id: 'senior_executive', name: 'Senior Executive', business: 5000, reward: 200, direct: 2 },
-    { id: 'manager', name: 'Manager', business: 10000, reward: 500, direct: 5 },
-    { id: 'senior_manager', name: 'Senior Manager', business: 25000, reward: 1000, direct: 10 },
-    { id: 'diamond', name: 'Diamond', business: 50000, reward: 2000, direct: 20 },
-    { id: 'royal_diamond', name: 'Royal Diamond', business: 100000, reward: 5000, direct: 30 },
-    { id: 'crown_diamond', name: 'Crown Diamond', business: 200000, reward: 10000, direct: 50 },
-    { id: 'global_crown', name: 'Global Crown', business: 500000, reward: 25000, direct: 75 },
-    { id: 'ambassador', name: 'Ambassador', business: 1000000, reward: 50000, direct: 100 },
-    { id: 'royal_ambassador', name: 'Royal Ambassador', business: 2000000, reward: 100000, direct: 150 }
+    { id: 'senior_executive', name: 'Senior Executive', business: 10000, reward: 150, direct: 2 },
+    { id: 'manager', name: 'Manager', business: 30000, reward: 500, direct: 2 },
+    { id: 'senior_manager', name: 'Senior Manager', business: 75000, reward: 1000, direct: 2 },
+    { id: 'director', name: 'Director', business: 150000, reward: 2500, direct: 2 },
+    { id: 'senior_director', name: 'Senior Director', business: 300000, reward: 5000, direct: 2 },
+    { id: 'diamond', name: 'Diamond', business: 750000, reward: 10000, direct: 2 }
 ];
 
 // ============================================================
-// 🔥 PROCESS DAILY RELEASES
+// 🔥 GET RANK PROGRESS
 // ============================================================
-async function processDailyReleases(userId) {
+function getRankProgress(teamBusiness, qualifiedDirects, currentRankName) {
+    const currentIndex = RANK_LEVELS.findIndex(r => r.name === currentRankName);
+    
+    if (currentIndex === -1 || currentIndex >= RANK_LEVELS.length - 1) {
+        if (currentIndex === RANK_LEVELS.length - 1) {
+            return {
+                currentRank: currentRankName,
+                nextRank: null,
+                businessProgress: 100,
+                directProgress: 100,
+                businessNeeded: 0,
+                directNeeded: 0,
+                reward: 0
+            };
+        }
+        const nextRank = RANK_LEVELS[0];
+        return {
+            currentRank: 'Member',
+            nextRank: nextRank,
+            businessProgress: Math.min((teamBusiness / nextRank.business) * 100, 100),
+            directProgress: Math.min((qualifiedDirects / nextRank.direct) * 100, 100),
+            businessNeeded: Math.max(nextRank.business - teamBusiness, 0),
+            directNeeded: Math.max(nextRank.direct - qualifiedDirects, 0),
+            reward: nextRank.reward
+        };
+    }
+    
+    const nextRank = RANK_LEVELS[currentIndex + 1];
+    return {
+        currentRank: currentRankName,
+        nextRank: nextRank,
+        businessProgress: Math.min((teamBusiness / nextRank.business) * 100, 100),
+        directProgress: Math.min((qualifiedDirects / nextRank.direct) * 100, 100),
+        businessNeeded: Math.max(nextRank.business - teamBusiness, 0),
+        directNeeded: Math.max(nextRank.direct - qualifiedDirects, 0),
+        reward: nextRank.reward
+    };
+}
+
+// ============================================================
+// 🔥 CHECK AND UPDATE RANK (AUTO RANK + REWARD)
+// ============================================================
+async function checkAndUpdateRank(userId) {
     try {
         const userRef = ref(db, 'users/' + userId);
         const result = await runTransaction(userRef, (currentData) => {
             if (!currentData) return { ...currentData };
-            const packages = currentData.packages || {};
-            const today = new Date().toDateString();
-            const lastReleaseDate = currentData.lastReleaseDate || '';
-            if (lastReleaseDate === today) return { ...currentData };
-
-            let totalReleaseToday = 0;
-            let updatedPackages = {};
-            let rndWallet = currentData.rndWallet || 0;
-            let lockedRND = currentData.lockedRND || 0;
-            let totalReleased = currentData.totalReleased || 0;
-            let totalDailyRelease = 0;
-            let releaseTransactions = [];
-            let totalStake = 0;
-            let activePackages = 0;
-
-            for (let key in packages) {
-                const pkg = packages[key];
-                if (pkg.status !== 'active') {
-                    updatedPackages[key] = pkg;
-                    continue;
+            
+            const teamBusiness = currentData.teamBusiness || 0;
+            const qualifiedDirects = currentData.qualifiedDirects || 0;
+            const currentRank = currentData.rank || 'Member';
+            const rankRewardPaid = currentData.rankRewardPaid || {};
+            
+            let achievedRank = null;
+            let rankUpgraded = false;
+            
+            for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
+                const rank = RANK_LEVELS[i];
+                if (teamBusiness >= rank.business && qualifiedDirects >= rank.direct) {
+                    const currentIndex = RANK_LEVELS.findIndex(r => r.name === currentRank);
+                    if (i > currentIndex || currentRank === 'Member') {
+                        achievedRank = rank;
+                        rankUpgraded = true;
+                        break;
+                    }
                 }
-                const remainingRND = pkg.remainingRND || 0;
-                const dailyRelease = pkg.dailyRelease || 0;
-                let releaseAmount = dailyRelease;
-                if (releaseAmount > remainingRND) releaseAmount = remainingRND;
-
-                pkg.remainingRND = remainingRND - releaseAmount;
-                pkg.releasedRND = (pkg.releasedRND || 0) + releaseAmount;
-                rndWallet += releaseAmount;
-                lockedRND -= releaseAmount;
-                totalReleased += releaseAmount;
-                totalReleaseToday += releaseAmount;
-                totalDailyRelease += dailyRelease;
-                totalStake += (pkg.usdtAmount || 0);
-                activePackages++;
-                if (pkg.remainingRND <= 0) { pkg.remainingRND = 0; pkg.status = 'completed'; }
-                updatedPackages[key] = pkg;
-                releaseTransactions.push({
-                    type: 'daily_release',
-                    amount: releaseAmount,
-                    currency: 'RND',
-                    packageId: key,
-                    planName: pkg.planName || 'Package',
-                    timestamp: Date.now(),
-                    date: today,
-                    status: 'completed',
-                    description: `Daily release of ${releaseAmount.toFixed(4)} RND`
-                });
             }
-
-            if (totalReleaseToday > 0) {
-                const transactions = currentData.transactions || {};
-                for (let tx of releaseTransactions) {
-                    const txId = 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    transactions[txId] = tx;
-                }
-                return {
-                    ...currentData,
-                    packages: updatedPackages,
-                    rndWallet: rndWallet,
-                    lockedRND: lockedRND,
-                    totalReleased: totalReleased,
-                    releaseWallet: totalDailyRelease,
-                    totalStake: totalStake,
-                    activePackages: activePackages,
-                    lastReleaseDate: today,
-                    transactions: transactions
+            
+            if (!rankUpgraded || !achievedRank) {
+                return { ...currentData };
+            }
+            
+            if (rankRewardPaid[achievedRank.id]) {
+                return { 
+                    ...currentData, 
+                    rank: achievedRank.name,
+                    teamBusiness: teamBusiness,
+                    qualifiedDirects: qualifiedDirects
                 };
             }
-            return { ...currentData };
+            
+            // 🔥 CREDIT REWARD TO DEPOSIT WALLET
+            const depositWallet = currentData.depositWallet || 0;
+            const newDepositWallet = depositWallet + achievedRank.reward;
+            
+            rankRewardPaid[achievedRank.id] = {
+                paidAt: Date.now(),
+                amount: achievedRank.reward,
+                teamBusiness: teamBusiness,
+                qualifiedDirects: qualifiedDirects
+            };
+            
+            const transactions = currentData.transactions || {};
+            const txId = 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            transactions[txId] = {
+                type: 'rank_reward',
+                rank: achievedRank.name,
+                reward: achievedRank.reward,
+                currency: 'USDT',
+                timestamp: Date.now(),
+                date: new Date().toDateString(),
+                status: 'completed',
+                description: `🏆 Rank Achieved: ${achievedRank.name} - Reward $${achievedRank.reward}`
+            };
+            
+            const notifications = currentData.notifications || {};
+            const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+            notifications[notifId] = {
+                title: '🎉 Rank Achieved!',
+                message: `Congratulations! You achieved ${achievedRank.name} rank and earned $${achievedRank.reward} USDT.`,
+                rank: achievedRank.name,
+                reward: achievedRank.reward,
+                read: false,
+                timestamp: Date.now(),
+                date: new Date().toDateString(),
+                type: 'rank_reward'
+            };
+            
+            setTimeout(() => {
+                showToast(`🎉 Congratulations! You achieved ${achievedRank.name} rank! $${achievedRank.reward} USDT credited.`, 'success');
+            }, 1000);
+            
+            return {
+                ...currentData,
+                rank: achievedRank.name,
+                depositWallet: newDepositWallet,
+                rankRewardPaid: rankRewardPaid,
+                teamBusiness: teamBusiness,
+                qualifiedDirects: qualifiedDirects,
+                transactions: transactions,
+                notifications: notifications
+            };
         });
+        
         return result.committed ? result.snapshot.val() : null;
     } catch (error) {
-        console.error('Error processing daily releases:', error);
+        console.error('Error checking rank:', error);
         return null;
     }
 }
 
 // ============================================================
-// 🔥 RECALCULATE TEAM STRUCTURE
+// 🔥 RECALCULATE TEAM STRUCTURE (Basic - No Residual)
 // ============================================================
 async function recalculateTeamStructure(userId) {
     try {
@@ -180,145 +235,30 @@ async function recalculateTeamStructure(userId) {
         const allUsers = usersSnap.val();
         const currentUser = allUsers[userId];
         if (!currentUser) return null;
+        
         const userRefCode = currentUser.referralCode;
-
-        let level1 = [], level2 = [], level3 = [], level4 = [], level5 = [];
+        let directReferrals = 0;
+        let qualifiedDirects = 0;
+        
         for (let uid in allUsers) {
             const u = allUsers[uid];
-            if (u.referredBy === userRefCode) level1.push({ uid, data: u });
-        }
-
-        let currentLevel = level1;
-        let levelNum = 2;
-        while (currentLevel.length > 0 && levelNum <= 5) {
-            let nextLevel = [];
-            for (let item of currentLevel) {
-                const refCode = item.data.referralCode;
-                for (let uid in allUsers) {
-                    const u = allUsers[uid];
-                    if (u.referredBy === refCode && !nextLevel.some(x => x.uid === uid)) {
-                        nextLevel.push({ uid, data: u });
-                    }
+            if (u.referredBy === userRefCode) {
+                directReferrals++;
+                // Check if this direct member has a rank (not Member)
+                if (u.rank && u.rank !== 'Member' && u.rank !== 'member') {
+                    qualifiedDirects++;
                 }
             }
-            if (levelNum === 2) level2 = nextLevel;
-            else if (levelNum === 3) level3 = nextLevel;
-            else if (levelNum === 4) level4 = nextLevel;
-            else if (levelNum === 5) level5 = nextLevel;
-            currentLevel = nextLevel;
-            levelNum++;
         }
-
-        const teamLevels = {
-            level1: level1.filter((v, i, a) => a.findIndex(t => t.uid === v.uid) === i).length,
-            level2: level2.filter((v, i, a) => a.findIndex(t => t.uid === v.uid) === i).length,
-            level3: level3.filter((v, i, a) => a.findIndex(t => t.uid === v.uid) === i).length,
-            level4: level4.filter((v, i, a) => a.findIndex(t => t.uid === v.uid) === i).length,
-            level5: level5.filter((v, i, a) => a.findIndex(t => t.uid === v.uid) === i).length
-        };
-
+        
         await update(ref(db, 'users/' + userId), {
-            teamStructure: teamLevels,
-            totalReferrals: teamLevels.level1,
-            downline: teamLevels.level1 + teamLevels.level2 + teamLevels.level3 + teamLevels.level4 + teamLevels.level5
+            totalReferrals: directReferrals,
+            qualifiedDirects: qualifiedDirects
         });
-
-        return teamLevels;
+        
+        return { directReferrals, qualifiedDirects };
     } catch (error) {
         console.error('Error recalculating team structure:', error);
-        return null;
-    }
-}
-
-// ============================================================
-// 🔥 CHECK RANK AND AUTO REWARD
-// ============================================================
-async function checkAndUpdateRank(userId) {
-    try {
-        const userRef = ref(db, 'users/' + userId);
-        const result = await runTransaction(userRef, (currentData) => {
-            if (!currentData) return { ...currentData };
-            const teamBusiness = currentData.teamBusiness || 0;
-            const directReferrals = currentData.totalReferrals || 0;
-            const currentRank = currentData.rank || 'Member';
-            const earnedRewards = currentData.earnedRewards || {};
-
-            let newRank = currentRank;
-            let rankUpgraded = false;
-            for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
-                const rank = RANK_LEVELS[i];
-                if (teamBusiness >= rank.business && directReferrals >= rank.direct) {
-                    if (currentRank !== rank.name && !earnedRewards[rank.id]) {
-                        newRank = rank.name;
-                        rankUpgraded = true;
-                    } else if (currentRank === rank.name) {
-                        newRank = rank.name;
-                    }
-                    break;
-                }
-            }
-
-            if (rankUpgraded) {
-                let achievedRank = null;
-                for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
-                    const rank = RANK_LEVELS[i];
-                    if (teamBusiness >= rank.business && directReferrals >= rank.direct) {
-                        if (!earnedRewards[rank.id]) {
-                            achievedRank = rank;
-                            break;
-                        }
-                    }
-                }
-                if (achievedRank) {
-                    const incomeWallet = currentData.incomeWallet || 0;
-                    earnedRewards[achievedRank.id] = {
-                        date: new Date().toISOString(),
-                        reward: achievedRank.reward,
-                        teamBusiness: teamBusiness,
-                        directReferrals: directReferrals
-                    };
-                    const transactions = currentData.transactions || {};
-                    const txId = 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    transactions[txId] = {
-                        type: 'rank_reward',
-                        rank: achievedRank.name,
-                        reward: achievedRank.reward,
-                        currency: 'USDT',
-                        timestamp: Date.now(),
-                        date: new Date().toDateString(),
-                        status: 'completed',
-                        description: `Rank achieved: ${achievedRank.name} - Reward $${achievedRank.reward}`
-                    };
-                    const notifications = currentData.notifications || {};
-                    const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                    notifications[notifId] = {
-                        title: '🎉 Rank Achieved!',
-                        message: `Congratulations! You achieved ${achievedRank.name} rank and earned $${achievedRank.reward} USDT.`,
-                        rank: achievedRank.name,
-                        reward: achievedRank.reward,
-                        read: false,
-                        timestamp: Date.now(),
-                        date: new Date().toDateString(),
-                        type: 'rank_reward'
-                    };
-                    setTimeout(() => {
-                        showToast(`🎉 Congratulations! You achieved ${achievedRank.name} rank! Reward $${achievedRank.reward} USDT credited.`, 'success');
-                    }, 1000);
-                    return {
-                        ...currentData,
-                        rank: achievedRank.name,
-                        incomeWallet: incomeWallet + achievedRank.reward,
-                        earnedRewards: earnedRewards,
-                        transactions: transactions,
-                        notifications: notifications
-                    };
-                }
-            }
-            return { ...currentData };
-        });
-        return result.committed ? result.snapshot.val() : null;
-    } catch (error) {
-        console.error('Error checking rank:', error);
         return null;
     }
 }
@@ -332,7 +272,11 @@ function loadDashboard(userData) {
     const name = u.name || 'User';
     const rank = u.rank || 'Member';
     const isMember = rank === 'Member' || rank === 'member' || !rank;
-
+    
+    const directReferrals = u.totalReferrals || 0;
+    const qualifiedDirects = u.qualifiedDirects || 0;
+    const teamBusiness = u.teamBusiness || 0;
+    
     // Wallets
     const depositWallet = u.depositWallet || 0;
     const incomeWallet = u.incomeWallet || 0;
@@ -343,32 +287,22 @@ function loadDashboard(userData) {
     const totalReleased = u.totalReleased || 0;
     const activePackages = u.activePackages || 0;
     const totalStake = u.totalStake || 0;
-    const teamBusiness = u.teamBusiness || 0;
-    const directReferrals = u.totalReferrals || 0;
-    const downline = u.downline || 0;
-
-    // Commissions
-    const level1Earn = u.level1Earnings || 0;
-    const level2Earn = u.level2Earnings || 0;
-    const level3Earn = u.level3Earnings || 0;
-    const level4Earn = u.level4Earnings || 0;
-    const level5Earn = u.level5Earnings || 0;
-    const referralEarnings = u.referralEarnings || 0;
-
-    const teamLevels = u.teamStructure || { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0 };
+    
     const packages = u.packages || {};
     const totalPackages = Object.keys(packages).length;
-
+    
+    // 🔥 RANK PROGRESS
+    const progress = getRankProgress(teamBusiness, qualifiedDirects, rank);
+    
     // Update sidebar
     document.getElementById('sidebarName').textContent = name;
     document.getElementById('sidebarUserId').textContent = 'ID: ' + username.substring(0, 15) + '...';
     document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
     const badge = document.getElementById('referralBadge');
     if (badge) badge.textContent = directReferrals;
-
+    
     const rankClass = isMember ? 'rank-badge member' : 'rank-badge';
 
-    // Build HTML
     document.getElementById('dashboardContent').innerHTML = `
         <div class="row g-4">
             <!-- ====== WELCOME SECTION ====== -->
@@ -385,8 +319,8 @@ function loadDashboard(userData) {
                                 <span class="${rankClass}">
                                     <span class="icon">🏆</span> ${rank}
                                 </span>
-                                <span class="rank-badge" style="background:rgba(139,92,246,0.1);border-color:rgba(139,92,246,0.2);color:#a78bfa;">
-                                    <span class="icon">📊</span> Residual Levels: ${downline || 0}
+                                <span class="rank-badge" style="background:rgba(46,204,113,0.08);border-color:rgba(46,204,113,0.15);color:#8899bb;">
+                                    <span class="icon">📊</span> Directs: ${directReferrals}
                                 </span>
                             </div>
                         </div>
@@ -398,6 +332,88 @@ function loadDashboard(userData) {
                 </div>
             </div>
 
+            <!-- ====== RANK PROGRESS ====== -->
+            <div class="col-12">
+                <div class="rank-progress-card">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="rank-current">
+                                <div class="rank-label">Current Rank</div>
+                                <div class="rank-name">${rank}</div>
+                                <div class="rank-badge-small">
+                                    <i class="bi bi-award-fill"></i> 
+                                    ${isMember ? 'Start your journey!' : 'Keep going!'}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            ${progress.nextRank ? `
+                                <div class="rank-next">
+                                    <div class="rank-label">Next Rank</div>
+                                    <div class="rank-name">${progress.nextRank.name}</div>
+                                    <div class="rank-reward">💰 Reward: $${progress.nextRank.reward}</div>
+                                </div>
+                            ` : `
+                                <div class="rank-next">
+                                    <div class="rank-label">🎯 Maximum Rank</div>
+                                    <div class="rank-name">${rank}</div>
+                                    <div class="rank-reward">🏆 You are at the top!</div>
+                                </div>
+                            `}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="rank-requirements">
+                                <div class="rank-label">Requirements</div>
+                                ${progress.nextRank ? `
+                                    <div class="req-item">
+                                        <span>Team Business</span>
+                                        <span>$${formatNumber(teamBusiness)} / $${formatNumber(progress.nextRank.business)}</span>
+                                    </div>
+                                    <div class="req-item">
+                                        <span>Qualified Directs</span>
+                                        <span>${qualifiedDirects} / ${progress.nextRank.direct}</span>
+                                    </div>
+                                ` : `
+                                    <div class="req-item">
+                                        <span>✅ All requirements met!</span>
+                                        <span>🏆</span>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${progress.nextRank ? `
+                        <div class="progress-container mt-3">
+                            <div class="progress-labels">
+                                <span>Progress to ${progress.nextRank.name}</span>
+                                <span>${Math.round(progress.businessProgress)}%</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" style="width: ${Math.min(progress.businessProgress, 100)}%"></div>
+                            </div>
+                            <div class="progress-details">
+                                <span>🏢 Business: $${formatNumber(teamBusiness)} / $${formatNumber(progress.nextRank.business)}</span>
+                                <span>👥 Directs: ${qualifiedDirects} / ${progress.nextRank.direct}</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="progress-container mt-3">
+                            <div class="progress-labels">
+                                <span>🎯 Maximum Rank Achieved</span>
+                                <span>100%</span>
+                            </div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar-fill" style="width: 100%; background: linear-gradient(90deg, #fbbf24, #f59e0b);"></div>
+                            </div>
+                            <div class="progress-details">
+                                <span>🏆 You are a ${rank}!</span>
+                            </div>
+                        </div>
+                    `}
+                </div>
+            </div>
+
             <!-- ====== TOP STATS ====== -->
             <div class="col-12">
                 <div class="stats-row">
@@ -406,16 +422,16 @@ function loadDashboard(userData) {
                         <div class="label">Direct Referrals</div>
                     </div>
                     <div class="stat-box">
-                        <div class="number blue">${downline}</div>
-                        <div class="label">Residual Levels</div>
+                        <div class="number blue">${qualifiedDirects}</div>
+                        <div class="label">Qualified Directs</div>
                     </div>
                     <div class="stat-box">
-                        <div class="number gold">${totalPackages}</div>
-                        <div class="label">Active Packages</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="number teal">$${formatNumber(teamBusiness)}</div>
+                        <div class="number gold">$${formatNumber(teamBusiness)}</div>
                         <div class="label">Team Business</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="number teal">${totalPackages}</div>
+                        <div class="label">Active Packages</div>
                     </div>
                 </div>
             </div>
@@ -450,7 +466,7 @@ function loadDashboard(userData) {
                 </div>
             </div>
 
-            <!-- ====== DAILY RELEASE & LOCKED ====== -->
+            <!-- ====== DAILY RELEASE ====== -->
             <div class="col-12">
                 <div class="row g-3">
                     <div class="col-md-4">
@@ -480,75 +496,6 @@ function loadDashboard(userData) {
                 </div>
             </div>
 
-            <!-- ====== 5 LEVEL TEAM ====== -->
-            <div class="col-12">
-                <h5 class="fw-bold mb-3"><i class="bi bi-people text-success me-2"></i>Team Members by Level</h5>
-                <div class="level-grid">
-                    <div class="level-card">
-                        <div class="level-number">${teamLevels.level1 || 0}</div>
-                        <div class="level-label">Level 1</div>
-                    </div>
-                    <div class="level-card">
-                        <div class="level-number">${teamLevels.level2 || 0}</div>
-                        <div class="level-label">Level 2</div>
-                    </div>
-                    <div class="level-card">
-                        <div class="level-number">${teamLevels.level3 || 0}</div>
-                        <div class="level-label">Level 3</div>
-                    </div>
-                    <div class="level-card">
-                        <div class="level-number">${teamLevels.level4 || 0}</div>
-                        <div class="level-label">Level 4</div>
-                    </div>
-                    <div class="level-card">
-                        <div class="level-number">${teamLevels.level5 || 0}</div>
-                        <div class="level-label">Level 5</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ====== 5 LEVEL COMMISSIONS ====== -->
-            <div class="col-12">
-                <div class="card-glass">
-                    <div class="card-title"><i class="bi bi-cash-stack text-success me-2"></i>5 Level Referral Commissions</div>
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="commission-row">
-                                <span class="level-name">Level 1 <span class="badge-percent">8%</span></span>
-                                <span class="earnings">$${level1Earn.toFixed(2)}</span>
-                            </div>
-                            <div class="commission-row">
-                                <span class="level-name">Level 2 <span class="badge-percent">4%</span></span>
-                                <span class="earnings">$${level2Earn.toFixed(2)}</span>
-                            </div>
-                            <div class="commission-row">
-                                <span class="level-name">Level 3 <span class="badge-percent">2%</span></span>
-                                <span class="earnings">$${level3Earn.toFixed(2)}</span>
-                            </div>
-                            <div class="commission-row">
-                                <span class="level-name">Level 4 <span class="badge-percent">1%</span></span>
-                                <span class="earnings">$${level4Earn.toFixed(2)}</span>
-                            </div>
-                            <div class="commission-row">
-                                <span class="level-name">Level 5 <span class="badge-percent">1%</span></span>
-                                <span class="earnings">$${level5Earn.toFixed(2)}</span>
-                            </div>
-                            <div class="commission-row total">
-                                <span class="level-name">Total Referral Earnings</span>
-                                <span class="earnings">$${referralEarnings.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center d-flex flex-column justify-content-center">
-                            <div style="padding:20px;background:rgba(46,204,113,0.05);border-radius:12px;border:1px solid rgba(46,204,113,0.1);">
-                                <small class="text-muted">Total Stake</small>
-                                <h3 style="color:#60a5fa;">$${totalStake.toFixed(2)}</h3>
-                                <small class="text-muted">USDT</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- ====== REFERRAL LINK ====== -->
             <div class="col-12">
                 <div class="card-glass">
@@ -563,7 +510,7 @@ function loadDashboard(userData) {
                     </div>
                     <div class="mt-2 d-flex flex-wrap gap-3">
                         <span class="text-muted small"><i class="bi bi-people me-1"></i>Direct: <strong style="color:#2ecc71;">${directReferrals}</strong></span>
-                        <span class="text-muted small"><i class="bi bi-tree me-1"></i>Downline: <strong style="color:#60a5fa;">${downline}</strong></span>
+                        <span class="text-muted small"><i class="bi bi-award me-1"></i>Qualified: <strong style="color:#fbbf24;">${qualifiedDirects}</strong></span>
                     </div>
                 </div>
             </div>
@@ -585,7 +532,6 @@ function loadDashboard(userData) {
         </div>
     `;
 
-    // Copy referral button
     document.getElementById('copyReferralBtn')?.addEventListener('click', () => {
         const text = `${username} | Code: ${u.referralCode}`;
         navigator.clipboard.writeText(text).then(() => {
@@ -627,9 +573,10 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        // 🔥 Process daily releases
-        await processDailyReleases(user.uid);
+        // 🔥 Recalculate team structure (direct referrals + qualified directs)
         await recalculateTeamStructure(user.uid);
+
+        // 🔥 Check and update rank (auto promotion + reward)
         await checkAndUpdateRank(user.uid);
 
         // 🔥 Get updated data
