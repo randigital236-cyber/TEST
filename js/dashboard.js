@@ -1,4 +1,7 @@
-import { auth, db, LOGIN_URL } from "./firebase.js";
+// ============================================================
+// 🔥 DASHBOARD - CORE LOGIC
+// ============================================================
+import { auth, db, LOGIN_URL, DASHBOARD_URL } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { ref, get, update, runTransaction } from "firebase/database";
 
@@ -21,7 +24,7 @@ function showToast(message, type = 'success') {
 }
 
 // ============================================================
-// 🔥 SIDEBAR
+// 🔥 SIDEBAR CONTROLS
 // ============================================================
 const sidebarPanel = document.getElementById('sidebarPanel');
 const sidebarOverlay = document.getElementById('sidebarOverlay');
@@ -50,7 +53,7 @@ document.getElementById('logoutBtnSidebar')?.addEventListener('click', async (e)
 });
 
 // ============================================================
-// 🔥 GET GREETING
+// 🔥 UTILITY FUNCTIONS
 // ============================================================
 function getGreeting() {
     const hour = new Date().getHours();
@@ -59,19 +62,21 @@ function getGreeting() {
     return 'Evening';
 }
 
-// ============================================================
-// 🔥 FORMAT NUMBER
-// ============================================================
 function formatNumber(num) {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return num.toFixed(2);
 }
 
+function formatCurrency(amount) {
+    return '$' + amount.toFixed(2);
+}
+
 // ============================================================
-// 🔥 RANK LEVELS (Only these ranks)
+// 🔥 RANK SYSTEM CONFIGURATION
 // ============================================================
 const RANK_LEVELS = [
+    { id: 'member', name: 'Member', business: 0, reward: 0, direct: 0 },
     { id: 'executive', name: 'Executive', business: 3000, reward: 50, direct: 0 },
     { id: 'senior_executive', name: 'Senior Executive', business: 10000, reward: 150, direct: 2 },
     { id: 'manager', name: 'Manager', business: 30000, reward: 500, direct: 2 },
@@ -96,18 +101,20 @@ function getRankProgress(teamBusiness, qualifiedDirects, currentRankName) {
                 directProgress: 100,
                 businessNeeded: 0,
                 directNeeded: 0,
-                reward: 0
+                reward: 0,
+                isMaxRank: true
             };
         }
-        const nextRank = RANK_LEVELS[0];
+        const nextRank = RANK_LEVELS[1]; // Executive is first rank
         return {
             currentRank: 'Member',
             nextRank: nextRank,
             businessProgress: Math.min((teamBusiness / nextRank.business) * 100, 100),
-            directProgress: Math.min((qualifiedDirects / nextRank.direct) * 100, 100),
+            directProgress: Math.min((qualifiedDirects / (nextRank.direct || 1)) * 100, 100),
             businessNeeded: Math.max(nextRank.business - teamBusiness, 0),
-            directNeeded: Math.max(nextRank.direct - qualifiedDirects, 0),
-            reward: nextRank.reward
+            directNeeded: Math.max((nextRank.direct || 0) - qualifiedDirects, 0),
+            reward: nextRank.reward,
+            isMaxRank: false
         };
     }
     
@@ -116,15 +123,16 @@ function getRankProgress(teamBusiness, qualifiedDirects, currentRankName) {
         currentRank: currentRankName,
         nextRank: nextRank,
         businessProgress: Math.min((teamBusiness / nextRank.business) * 100, 100),
-        directProgress: Math.min((qualifiedDirects / nextRank.direct) * 100, 100),
+        directProgress: Math.min((qualifiedDirects / (nextRank.direct || 1)) * 100, 100),
         businessNeeded: Math.max(nextRank.business - teamBusiness, 0),
-        directNeeded: Math.max(nextRank.direct - qualifiedDirects, 0),
-        reward: nextRank.reward
+        directNeeded: Math.max((nextRank.direct || 0) - qualifiedDirects, 0),
+        reward: nextRank.reward,
+        isMaxRank: false
     };
 }
 
 // ============================================================
-// 🔥 CHECK AND UPDATE RANK (AUTO RANK + REWARD)
+// 🔥 CHECK AND UPDATE RANK (AUTO PROMOTION + REWARD)
 // ============================================================
 async function checkAndUpdateRank(userId) {
     try {
@@ -139,23 +147,27 @@ async function checkAndUpdateRank(userId) {
             
             let achievedRank = null;
             let rankUpgraded = false;
+            let rankIndex = -1;
             
+            // Find highest achievable rank
             for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
                 const rank = RANK_LEVELS[i];
-                if (teamBusiness >= rank.business && qualifiedDirects >= rank.direct) {
-                    const currentIndex = RANK_LEVELS.findIndex(r => r.name === currentRank);
-                    if (i > currentIndex || currentRank === 'Member') {
+                if (teamBusiness >= rank.business && qualifiedDirects >= (rank.direct || 0)) {
+                    const currentIdx = RANK_LEVELS.findIndex(r => r.name === currentRank);
+                    if (i > currentIdx || currentRank === 'Member') {
                         achievedRank = rank;
+                        rankIndex = i;
                         rankUpgraded = true;
                         break;
                     }
                 }
             }
             
-            if (!rankUpgraded || !achievedRank) {
+            if (!rankUpgraded || !achievedRank || rankIndex <= 0) {
                 return { ...currentData };
             }
             
+            // Check if reward already paid for this rank
             if (rankRewardPaid[achievedRank.id]) {
                 return { 
                     ...currentData, 
@@ -176,6 +188,7 @@ async function checkAndUpdateRank(userId) {
                 qualifiedDirects: qualifiedDirects
             };
             
+            // Add transaction
             const transactions = currentData.transactions || {};
             const txId = 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
             transactions[txId] = {
@@ -189,6 +202,7 @@ async function checkAndUpdateRank(userId) {
                 description: `🏆 Rank Achieved: ${achievedRank.name} - Reward $${achievedRank.reward}`
             };
             
+            // Add notification
             const notifications = currentData.notifications || {};
             const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
             notifications[notifId] = {
@@ -202,6 +216,7 @@ async function checkAndUpdateRank(userId) {
                 type: 'rank_reward'
             };
             
+            // Show toast notification
             setTimeout(() => {
                 showToast(`🎉 Congratulations! You achieved ${achievedRank.name} rank! $${achievedRank.reward} USDT credited.`, 'success');
             }, 1000);
@@ -226,7 +241,7 @@ async function checkAndUpdateRank(userId) {
 }
 
 // ============================================================
-// 🔥 RECALCULATE TEAM STRUCTURE (Basic - No Residual)
+// 🔥 RECALCULATE TEAM STRUCTURE
 // ============================================================
 async function recalculateTeamStructure(userId) {
     try {
@@ -236,13 +251,13 @@ async function recalculateTeamStructure(userId) {
         const currentUser = allUsers[userId];
         if (!currentUser) return null;
         
-        const userRefCode = currentUser.referralCode;
+        const userUid = userId;
         let directReferrals = 0;
         let qualifiedDirects = 0;
         
         for (let uid in allUsers) {
             const u = allUsers[uid];
-            if (u.referredBy === userRefCode) {
+            if (u.parentUid === userUid) {
                 directReferrals++;
                 // Check if this direct member has a rank (not Member)
                 if (u.rank && u.rank !== 'Member' && u.rank !== 'member') {
@@ -264,11 +279,28 @@ async function recalculateTeamStructure(userId) {
 }
 
 // ============================================================
+// 🔥 COPY TO CLIPBOARD
+// ============================================================
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('✅ Copied to clipboard!', 'success');
+    }).catch(() => {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('✅ Copied to clipboard!', 'success');
+    });
+}
+
+// ============================================================
 // 🔥 LOAD DASHBOARD
 // ============================================================
 function loadDashboard(userData) {
     const u = userData;
-    const username = u.username || u.referralCode || 'USER';
+    const uid = u.uid || '';
     const name = u.name || 'User';
     const rank = u.rank || 'Member';
     const isMember = rank === 'Member' || rank === 'member' || !rank;
@@ -294,14 +326,18 @@ function loadDashboard(userData) {
     // 🔥 RANK PROGRESS
     const progress = getRankProgress(teamBusiness, qualifiedDirects, rank);
     
+    // Referral Link
+    const referralLink = `${window.location.origin}${window.location.pathname.replace('dashboard.html', 'register.html')}?ref=${uid}`;
+    
     // Update sidebar
     document.getElementById('sidebarName').textContent = name;
-    document.getElementById('sidebarUserId').textContent = 'ID: ' + username.substring(0, 15) + '...';
+    document.getElementById('sidebarUserId').textContent = 'ID: ' + uid.substring(0, 12) + '...';
     document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
     const badge = document.getElementById('referralBadge');
     if (badge) badge.textContent = directReferrals;
     
     const rankClass = isMember ? 'rank-badge member' : 'rank-badge';
+    const rankMessage = isMember ? 'Start your journey!' : 'Keep going!';
 
     document.getElementById('dashboardContent').innerHTML = `
         <div class="row g-4">
@@ -313,8 +349,12 @@ function loadDashboard(userData) {
                             <div class="greeting">WELCOME BACK</div>
                             <h2>Good ${getGreeting()}, <span>${name}</span></h2>
                             <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
-                                <span class="user-id">
-                                    <i class="bi bi-person-badge me-1"></i>${username}
+                                <span class="user-id-badge">
+                                    <i class="bi bi-person-badge me-1"></i>
+                                    <strong style="font-size:0.7rem;font-weight:600;">${uid.substring(0, 20)}...</strong>
+                                    <button class="copy-btn-small" onclick="window.copyUID('${uid}')">
+                                        <i class="bi bi-clipboard"></i> Copy
+                                    </button>
                                 </span>
                                 <span class="${rankClass}">
                                     <span class="icon">🏆</span> ${rank}
@@ -332,7 +372,7 @@ function loadDashboard(userData) {
                 </div>
             </div>
 
-            <!-- ====== RANK PROGRESS ====== -->
+            <!-- ====== RANK PROGRESS CARD ====== -->
             <div class="col-12">
                 <div class="rank-progress-card">
                     <div class="row g-3">
@@ -341,8 +381,7 @@ function loadDashboard(userData) {
                                 <div class="rank-label">Current Rank</div>
                                 <div class="rank-name">${rank}</div>
                                 <div class="rank-badge-small">
-                                    <i class="bi bi-award-fill"></i> 
-                                    ${isMember ? 'Start your journey!' : 'Keep going!'}
+                                    <i class="bi bi-award-fill"></i> ${rankMessage}
                                 </div>
                             </div>
                         </div>
@@ -367,11 +406,11 @@ function loadDashboard(userData) {
                                 ${progress.nextRank ? `
                                     <div class="req-item">
                                         <span>Team Business</span>
-                                        <span>$${formatNumber(teamBusiness)} / $${formatNumber(progress.nextRank.business)}</span>
+                                        <span>${formatCurrency(teamBusiness)} / ${formatCurrency(progress.nextRank.business)}</span>
                                     </div>
                                     <div class="req-item">
                                         <span>Qualified Directs</span>
-                                        <span>${qualifiedDirects} / ${progress.nextRank.direct}</span>
+                                        <span>${qualifiedDirects} / ${progress.nextRank.direct || 0}</span>
                                     </div>
                                 ` : `
                                     <div class="req-item">
@@ -393,8 +432,8 @@ function loadDashboard(userData) {
                                 <div class="progress-bar-fill" style="width: ${Math.min(progress.businessProgress, 100)}%"></div>
                             </div>
                             <div class="progress-details">
-                                <span>🏢 Business: $${formatNumber(teamBusiness)} / $${formatNumber(progress.nextRank.business)}</span>
-                                <span>👥 Directs: ${qualifiedDirects} / ${progress.nextRank.direct}</span>
+                                <span>🏢 Business: ${formatCurrency(teamBusiness)} / ${formatCurrency(progress.nextRank.business)}</span>
+                                <span>👥 Directs: ${qualifiedDirects} / ${progress.nextRank.direct || 0}</span>
                             </div>
                         </div>
                     ` : `
@@ -426,7 +465,7 @@ function loadDashboard(userData) {
                         <div class="label">Qualified Directs</div>
                     </div>
                     <div class="stat-box">
-                        <div class="number gold">$${formatNumber(teamBusiness)}</div>
+                        <div class="number gold">${formatCurrency(teamBusiness)}</div>
                         <div class="label">Team Business</div>
                     </div>
                     <div class="stat-box">
@@ -441,19 +480,19 @@ function loadDashboard(userData) {
                 <div class="wallet-grid">
                     <div class="wallet-card">
                         <div class="wallet-icon deposit"><i class="bi bi-wallet2"></i></div>
-                        <div class="wallet-amount green">$${depositWallet.toFixed(2)}</div>
+                        <div class="wallet-amount green">${formatCurrency(depositWallet)}</div>
                         <div class="wallet-label">Deposit Wallet</div>
                         <div class="wallet-sub">USDT</div>
                     </div>
                     <div class="wallet-card">
                         <div class="wallet-icon income"><i class="bi bi-graph-up-arrow"></i></div>
-                        <div class="wallet-amount teal">$${incomeWallet.toFixed(2)}</div>
+                        <div class="wallet-amount teal">${formatCurrency(incomeWallet)}</div>
                         <div class="wallet-label">Income Wallet</div>
                         <div class="wallet-sub">USDT</div>
                     </div>
                     <div class="wallet-card">
                         <div class="wallet-icon reward"><i class="bi bi-gift"></i></div>
-                        <div class="wallet-amount gold">$${rewardWallet.toFixed(2)}</div>
+                        <div class="wallet-amount gold">${formatCurrency(rewardWallet)}</div>
                         <div class="wallet-label">Reward Wallet</div>
                         <div class="wallet-sub">USDT</div>
                     </div>
@@ -502,15 +541,14 @@ function loadDashboard(userData) {
                     <div class="card-title"><i class="bi bi-link-45deg text-success me-2"></i>Your Referral Link</div>
                     <div class="referral-box">
                         <span class="referral-code">
-                            <span class="highlight">${username}</span>
-                            <span style="color:#556688;"> | Code: </span>
-                            <span class="highlight">${u.referralCode}</span>
+                            <span class="highlight">${referralLink}</span>
                         </span>
                         <button class="copy-btn" id="copyReferralBtn"><i class="bi bi-clipboard me-1"></i>Copy</button>
                     </div>
                     <div class="mt-2 d-flex flex-wrap gap-3">
                         <span class="text-muted small"><i class="bi bi-people me-1"></i>Direct: <strong style="color:#2ecc71;">${directReferrals}</strong></span>
                         <span class="text-muted small"><i class="bi bi-award me-1"></i>Qualified: <strong style="color:#fbbf24;">${qualifiedDirects}</strong></span>
+                        <span class="text-muted small"><i class="bi bi-uid me-1"></i>UID: <strong style="color:#60a5fa;font-size:0.6rem;">${uid.substring(0, 16)}...</strong></span>
                     </div>
                 </div>
             </div>
@@ -532,15 +570,31 @@ function loadDashboard(userData) {
         </div>
     `;
 
+    // Copy Referral Link
     document.getElementById('copyReferralBtn')?.addEventListener('click', () => {
-        const text = `${username} | Code: ${u.referralCode}`;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.getElementById('copyReferralBtn');
-            btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
-            setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 2000);
-        });
+        copyToClipboard(referralLink);
+        const btn = document.getElementById('copyReferralBtn');
+        btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
+        setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 2000);
     });
 }
+
+// ============================================================
+// 🔥 COPY UID - GLOBAL FUNCTION
+// ============================================================
+window.copyUID = function(uid) {
+    navigator.clipboard.writeText(uid).then(() => {
+        showToast('✅ UID copied to clipboard!', 'success');
+    }).catch(() => {
+        const textArea = document.createElement('textarea');
+        textArea.value = uid;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast('✅ UID copied to clipboard!', 'success');
+    });
+};
 
 // ============================================================
 // 🔥 MAIN - AUTH STATE
@@ -566,6 +620,8 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         const u = userSnap.val();
+        
+        // Check if user is banned
         if (u.banned === true) {
             await signOut(auth);
             alert('Your account has been banned.');
@@ -573,7 +629,7 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        // 🔥 Recalculate team structure (direct referrals + qualified directs)
+        // 🔥 Recalculate team structure
         await recalculateTeamStructure(user.uid);
 
         // 🔥 Check and update rank (auto promotion + reward)
