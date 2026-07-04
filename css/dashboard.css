@@ -306,6 +306,22 @@
     font-weight: 700;
 }
 
+.copy-btn {
+    cursor: pointer;
+    padding: 4px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+    background: transparent;
+    color: #a0b8d0;
+    transition: all 0.3s ease;
+    font-size: 0.8rem;
+}
+
+.copy-btn:hover {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
 /* ----- RESPONSIVE ----- */
 @media (max-width: 992px) {
     .stats-row { grid-template-columns: repeat(2, 1fr); }
