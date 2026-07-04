@@ -576,4 +576,77 @@ function loadDashboard(userData) {
                         <a href="deposit.html" class="btn-primary-custom"><i class="bi bi-arrow-down-circle me-1"></i>Deposit</a>
                         <a href="withdraw.html" class="btn-outline-custom"><i class="bi bi-arrow-up-circle me-1"></i>Withdraw</a>
                         <a href="referral.html" class="btn-outline-custom"><i class="bi bi-people me-1"></i>Referrals</a>
-                        <a href="packages.html" class="btn-outline-custom"><i class="bi bi-box-seam me-1"></i>Packages</a
+                        <a href="packages.html" class="btn-outline-custom"><i class="bi bi-box-seam me-1"></i>Packages</a>
+                        <a href="profile.html" class="btn-outline-custom"><i class="bi bi-person me-1"></i>Profile</a>
+                        <a href="rank.html" class="btn-outline-custom"><i class="bi bi-trophy me-1"></i>Rank</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Copy referral button
+    document.getElementById('copyReferralBtn')?.addEventListener('click', () => {
+        const text = `${username} | Code: ${u.referralCode}`;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copyReferralBtn');
+            btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
+            setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 2000);
+        });
+    });
+}
+
+// ============================================================
+// 🔥 MAIN - AUTH STATE
+// ============================================================
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = LOGIN_URL;
+        return;
+    }
+
+    try {
+        const userSnap = await get(ref(db, 'users/' + user.uid));
+        if (!userSnap.exists()) {
+            document.getElementById('dashboardContent').innerHTML = `
+                <div class="text-center py-5">
+                    <i class="bi bi-exclamation-triangle text-danger fs-1 d-block mb-3"></i>
+                    <h4>Profile Not Found</h4>
+                    <p class="text-muted">Please register first to access your dashboard.</p>
+                    <a href="register.html" class="btn btn-primary-custom mt-3">Register Now</a>
+                </div>
+            `;
+            return;
+        }
+
+        const u = userSnap.val();
+        if (u.banned === true) {
+            await signOut(auth);
+            alert('Your account has been banned.');
+            window.location.href = LOGIN_URL;
+            return;
+        }
+
+        // 🔥 Process daily releases
+        await processDailyReleases(user.uid);
+        await recalculateTeamStructure(user.uid);
+        await checkAndUpdateRank(user.uid);
+
+        // 🔥 Get updated data
+        const updatedSnap = await get(ref(db, 'users/' + user.uid));
+        if (updatedSnap.exists()) {
+            loadDashboard(updatedSnap.val());
+        }
+
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        document.getElementById('dashboardContent').innerHTML = `
+            <div class="text-center py-5">
+                <i class="bi bi-exclamation-triangle text-danger fs-1 d-block mb-3"></i>
+                <h4>Error Loading Dashboard</h4>
+                <p class="text-muted">${error.message || 'Please check your internet connection.'}</p>
+                <button class="btn btn-primary-custom mt-3" onclick="location.reload()">Refresh</button>
+            </div>
+        `;
+    }
+});
