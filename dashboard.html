@@ -7,9 +7,901 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/responsive.css">
+    <style>
+        /* ============================================================
+           🔥 ALL CSS INLINE - NO EXTERNAL CSS FILES NEEDED
+           ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background: #080e1a;
+            color: #f0f4ff;
+            min-height: 100vh;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        /* ----- BUTTONS ----- */
+        .btn-primary-custom {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: inline-block;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+            color: #fff;
+        }
+
+        .btn-outline-custom {
+            border: 2px solid rgba(46, 204, 113, 0.25);
+            color: #a0b8d0;
+            padding: 8px 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            display: inline-block;
+            font-weight: 500;
+            background: transparent;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-outline-custom:hover {
+            border-color: #2ecc71;
+            color: #2ecc71;
+        }
+
+        /* ----- NAVBAR ----- */
+        .navbar-custom {
+            background: rgba(8, 14, 26, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(46, 204, 113, 0.1);
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+        }
+
+        .navbar-custom .navbar-brand {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff !important;
+        }
+
+        .navbar-custom .navbar-brand i {
+            color: #2ecc71;
+        }
+
+        /* ----- SIDEBAR TOGGLE ----- */
+        .sidebar-toggle {
+            background: rgba(46, 204, 113, 0.1);
+            border: 1px solid rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            padding: 6px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(46, 204, 113, 0.2);
+        }
+
+        /* ----- SIDEBAR ----- */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1060;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar-panel {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100%;
+            background: rgba(12, 20, 35, 0.98);
+            backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(46, 204, 113, 0.1);
+            z-index: 1070;
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 25px 0;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-panel.open {
+            right: 0;
+        }
+
+        .sidebar-panel .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(46, 204, 113, 0.08);
+            margin-bottom: 15px;
+        }
+
+        .sidebar-panel .sidebar-header h5 {
+            color: #fff;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .sidebar-panel .sidebar-header h5 i {
+            color: #2ecc71;
+        }
+
+        .sidebar-close {
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: #8899bb;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .sidebar-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .sidebar-panel .user-profile-sidebar {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid rgba(46, 204, 113, 0.06);
+            margin-bottom: 10px;
+        }
+
+        .sidebar-panel .user-profile-sidebar .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2ecc71, #1a7a3a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .sidebar-panel .user-profile-sidebar .user-name {
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-panel .user-profile-sidebar .user-id {
+            color: #8899bb;
+            font-size: 0.7rem;
+        }
+
+        .sidebar-panel .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 20px;
+            color: #8899bb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 2px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-panel .nav-item:hover {
+            background: rgba(46, 204, 113, 0.06);
+            color: #fff;
+        }
+
+        .sidebar-panel .nav-item.active {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+        }
+
+        .sidebar-panel .nav-item i {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-panel .nav-item .badge {
+            margin-left: auto;
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            font-weight: 600;
+            font-size: 0.65rem;
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+
+        .sidebar-panel .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid rgba(46, 204, 113, 0.06);
+        }
+
+        .sidebar-panel .sidebar-footer .nav-item {
+            color: #f87171;
+        }
+
+        .sidebar-panel .sidebar-footer .nav-item:hover {
+            background: rgba(239, 68, 68, 0.06);
+            color: #f87171;
+        }
+
+        /* ----- TOAST ----- */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+
+        .toast-custom {
+            background: rgba(19, 34, 55, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(46, 204, 113, 0.15);
+            border-radius: 16px;
+            padding: 14px 20px;
+            color: #f0f4ff;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.4s ease;
+            margin-bottom: 10px;
+        }
+
+        .toast-custom.success {
+            border-left: 4px solid #2ecc71;
+        }
+
+        .toast-custom.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast-custom i {
+            font-size: 1.4rem;
+        }
+
+        .toast-custom .toast-msg {
+            flex: 1;
+            font-size: 0.85rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ----- DASHBOARD CONTAINER ----- */
+        .dashboard-container {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ----- WELCOME SECTION ----- */
+        .welcome-section {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.08), rgba(26, 122, 58, 0.03));
+            border-radius: 24px;
+            padding: 25px 30px;
+            border: 1px solid rgba(46, 204, 113, 0.08);
+            margin-bottom: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(46, 204, 113, 0.03), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .welcome-section .greeting {
+            font-size: 0.85rem;
+            color: #8899bb;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .welcome-section h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 2px 0 6px;
+        }
+
+        .welcome-section h2 span {
+            color: #2ecc71;
+        }
+
+        .welcome-section .user-id-badge {
+            font-size: 0.8rem;
+            color: #2ecc71;
+            background: rgba(46, 204, 113, 0.12);
+            padding: 4px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(46, 204, 113, 0.15);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .user-id-badge .copy-btn-small {
+            background: rgba(46, 204, 113, 0.15);
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 0.6rem;
+            color: #2ecc71;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .user-id-badge .copy-btn-small:hover {
+            background: rgba(46, 204, 113, 0.25);
+        }
+
+        /* ----- RANK BADGE ----- */
+        .rank-badge {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05));
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 30px;
+            padding: 4px 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #fbbf24;
+            font-weight: 700;
+        }
+
+        .rank-badge .icon {
+            font-size: 0.9rem;
+        }
+
+        .rank-badge.member {
+            background: rgba(46, 204, 113, 0.06);
+            border-color: rgba(46, 204, 113, 0.1);
+            color: #8899bb;
+        }
+
+        /* ----- RANK PROGRESS CARD ----- */
+        .rank-progress-card {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.05), rgba(251, 191, 36, 0.01));
+            border: 1px solid rgba(251, 191, 36, 0.1);
+            border-radius: 20px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .rank-progress-card:hover {
+            border-color: rgba(251, 191, 36, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .rank-progress-card .rank-label {
+            color: #8899bb;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .rank-progress-card .rank-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fbbf24;
+            line-height: 1.2;
+        }
+
+        .rank-progress-card .rank-badge-small {
+            color: #a0b8d0;
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .rank-progress-card .rank-reward {
+            color: #2ecc71;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .rank-progress-card .rank-current {
+            padding: 8px 0;
+        }
+
+        .rank-progress-card .rank-next {
+            padding: 8px 0;
+            border-left: 1px solid rgba(251, 191, 36, 0.08);
+            padding-left: 20px;
+        }
+
+        .rank-progress-card .rank-requirements {
+            padding: 8px 0;
+            border-left: 1px solid rgba(251, 191, 36, 0.08);
+            padding-left: 20px;
+        }
+
+        .rank-progress-card .req-item {
+            display: flex;
+            justify-content: space-between;
+            color: #a0b8d0;
+            font-size: 0.8rem;
+            padding: 3px 0;
+        }
+
+        .rank-progress-card .req-item span:last-child {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* ----- PROGRESS BAR ----- */
+        .progress-container {
+            width: 100%;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            color: #8899bb;
+            font-size: 0.75rem;
+            margin-bottom: 6px;
+        }
+
+        .progress-labels span:last-child {
+            color: #fbbf24;
+            font-weight: 700;
+        }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #fbbf24);
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        .progress-details {
+            display: flex;
+            justify-content: space-between;
+            color: #556688;
+            font-size: 0.65rem;
+            margin-top: 6px;
+        }
+
+        .progress-details span:last-child {
+            color: #8899bb;
+        }
+
+        /* ----- STATS ROW ----- */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            background: rgba(19, 34, 55, 0.6);
+            border: 1px solid rgba(46, 204, 113, 0.06);
+            border-radius: 16px;
+            padding: 14px 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            border-color: rgba(46, 204, 113, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .stat-box .number {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .stat-box .number.green {
+            color: #2ecc71;
+        }
+        .stat-box .number.gold {
+            color: #fbbf24;
+        }
+        .stat-box .number.blue {
+            color: #60a5fa;
+        }
+        .stat-box .number.teal {
+            color: #34d399;
+        }
+
+        .stat-box .label {
+            color: #8899bb;
+            font-size: 0.65rem;
+            font-weight: 500;
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ----- WALLET CARDS ----- */
+        .wallet-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .wallet-card {
+            background: rgba(19, 34, 55, 0.7);
+            border: 1px solid rgba(46, 204, 113, 0.06);
+            border-radius: 18px;
+            padding: 16px 18px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallet-card:hover {
+            border-color: rgba(46, 204, 113, 0.2);
+            transform: translateY(-3px);
+        }
+
+        .wallet-card .wallet-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        .wallet-card .wallet-icon.deposit {
+            background: rgba(46, 204, 113, 0.12);
+            color: #2ecc71;
+        }
+        .wallet-card .wallet-icon.income {
+            background: rgba(52, 211, 153, 0.12);
+            color: #34d399;
+        }
+        .wallet-card .wallet-icon.reward {
+            background: rgba(251, 191, 36, 0.12);
+            color: #fbbf24;
+        }
+        .wallet-card .wallet-icon.rnd {
+            background: rgba(59, 130, 246, 0.12);
+            color: #60a5fa;
+        }
+        .wallet-card .wallet-icon.locked {
+            background: rgba(139, 92, 246, 0.12);
+            color: #a78bfa;
+        }
+
+        .wallet-card .wallet-amount {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .wallet-card .wallet-amount.green {
+            color: #2ecc71;
+        }
+        .wallet-card .wallet-amount.gold {
+            color: #fbbf24;
+        }
+        .wallet-card .wallet-amount.blue {
+            color: #60a5fa;
+        }
+        .wallet-card .wallet-amount.teal {
+            color: #34d399;
+        }
+
+        .wallet-card .wallet-label {
+            color: #8899bb;
+            font-size: 0.65rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .wallet-card .wallet-sub {
+            color: #556688;
+            font-size: 0.55rem;
+        }
+
+        /* ----- REFERRAL LINK ----- */
+        .card-glass {
+            background: rgba(19, 34, 55, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(46, 204, 113, 0.06);
+            border-radius: 20px;
+            padding: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        .card-glass:hover {
+            border-color: rgba(46, 204, 113, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .card-glass .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .card-glass .card-title i {
+            color: #2ecc71;
+        }
+
+        .referral-box {
+            background: rgba(8, 14, 26, 0.6);
+            border-radius: 12px;
+            padding: 10px 14px;
+            border: 1px dashed rgba(46, 204, 113, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .referral-box .referral-code {
+            color: #a0b8d0;
+            font-size: 0.75rem;
+            word-break: break-all;
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .referral-box .referral-code .highlight {
+            color: #2ecc71;
+            font-weight: 700;
+        }
+
+        .copy-btn {
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            background: transparent;
+            color: #a0b8d0;
+            transition: all 0.3s ease;
+            font-size: 0.75rem;
+        }
+
+        .copy-btn:hover {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+        }
+
+        /* ----- SCROLLBAR ----- */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(46, 204, 113, 0.03);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(46, 204, 113, 0.2);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(46, 204, 113, 0.4);
+        }
+
+        /* ----- RESPONSIVE ----- */
+        @media (max-width: 992px) {
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .wallet-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 15px;
+            }
+            .welcome-section {
+                padding: 18px;
+            }
+            .welcome-section h2 {
+                font-size: 1.2rem;
+            }
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .wallet-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            .stat-box .number {
+                font-size: 1.3rem;
+            }
+            .wallet-card .wallet-amount {
+                font-size: 1.2rem;
+            }
+            .rank-progress-card {
+                padding: 16px 18px;
+            }
+            .rank-progress-card .rank-name {
+                font-size: 1.3rem;
+            }
+            .rank-progress-card .rank-next,
+            .rank-progress-card .rank-requirements {
+                border-left: none;
+                padding-left: 0;
+                padding-top: 0;
+            }
+            .rank-progress-card .rank-current {
+                padding-bottom: 4px;
+            }
+            .sidebar-panel {
+                width: 280px;
+                right: -290px;
+            }
+            .sidebar-panel .nav-item {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: 10px;
+            }
+            .welcome-section {
+                padding: 14px;
+            }
+            .welcome-section h2 {
+                font-size: 1rem;
+            }
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .wallet-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .stat-box {
+                padding: 10px 8px;
+            }
+            .stat-box .number {
+                font-size: 1.1rem;
+            }
+            .wallet-card {
+                padding: 12px 12px;
+            }
+            .wallet-card .wallet-amount {
+                font-size: 1rem;
+            }
+            .rank-progress-card {
+                padding: 12px 14px;
+            }
+            .rank-progress-card .rank-name {
+                font-size: 1.1rem;
+            }
+            .rank-progress-card .req-item {
+                font-size: 0.7rem;
+            }
+            .sidebar-panel {
+                width: 100%;
+                right: -100%;
+            }
+            .sidebar-panel.open {
+                right: 0;
+            }
+            .btn-primary-custom,
+            .btn-outline-custom {
+                padding: 5px 12px;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* PRINT */
+        @media print {
+            .navbar-custom,
+            .sidebar-toggle,
+            .sidebar-panel,
+            .sidebar-overlay {
+                display: none !important;
+            }
+            body {
+                background: #fff;
+            }
+            .welcome-section,
+            .wallet-card,
+            .card-glass,
+            .stat-box,
+            .rank-progress-card {
+                background: #f8f8f8 !important;
+                border-color: #ddd !important;
+            }
+            .wallet-amount,
+            .stat-box .number,
+            .rank-name {
+                color: #000 !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -92,16 +984,649 @@
     <!-- ====== SCRIPTS ====== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script type="importmap">
-    {
-        "imports": {
-            "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
-            "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
-            "firebase/database": "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js",
+                "firebase/database": "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js"
+            }
         }
-    }
     </script>
-    <script type="module" src="js/firebase.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/dashboard.js"></script>
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+        import { getDatabase, ref, get, update, runTransaction } from "firebase/database";
+
+        // ============================================================
+        // 🔥 FIREBASE CONFIG - NEW TEST PROJECT
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzHmIimieea8H9KzYFDSqD0lGOCZjxHYw",
+            authDomain: "myapp-ee226.firebaseapp.com",
+            databaseURL: "https://myapp-ee226-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "myapp-ee226",
+            storageBucket: "myapp-ee226.firebasestorage.app",
+            messagingSenderId: "272405753135",
+            appId: "1:272405753135:web:598ec27c28bcf6b04105da",
+            measurementId: "G-D5KYTMJ5WK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const LOGIN_URL = "login.html";
+        const DASHBOARD_URL = "dashboard.html";
+
+        // ============================================================
+        // 🔥 TOAST NOTIFICATION
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast-custom ${type}`;
+            const icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
+            toast.innerHTML = `<i class="bi ${icon}"></i><span class="toast-msg">${message}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // ============================================================
+        // 🔥 SIDEBAR CONTROLS
+        // ============================================================
+        const sidebarPanel = document.getElementById('sidebarPanel');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarClose = document.getElementById('sidebarClose');
+
+        function openSidebar() {
+            sidebarPanel.classList.add('open');
+            sidebarOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebarPanel.classList.remove('open');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        sidebarToggle?.addEventListener('click', openSidebar);
+        sidebarClose?.addEventListener('click', closeSidebar);
+        sidebarOverlay?.addEventListener('click', closeSidebar);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSidebar(); });
+
+        document.getElementById('logoutBtnSidebar')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await signOut(auth);
+            window.location.href = LOGIN_URL;
+        });
+
+        // ============================================================
+        // 🔥 UTILITY FUNCTIONS
+        // ============================================================
+        function getGreeting() {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'Morning';
+            if (hour < 17) return 'Afternoon';
+            return 'Evening';
+        }
+
+        function formatCurrency(amount) {
+            return '$' + amount.toFixed(2);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✅ Copied to clipboard!', 'success');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showToast('✅ Copied to clipboard!', 'success');
+            });
+        }
+
+        // ============================================================
+        // 🔥 RANK SYSTEM
+        // ============================================================
+        const RANK_LEVELS = [
+            { id: 'member', name: 'Member', business: 0, reward: 0, direct: 0 },
+            { id: 'executive', name: 'Executive', business: 3000, reward: 50, direct: 0 },
+            { id: 'senior_executive', name: 'Senior Executive', business: 10000, reward: 150, direct: 2 },
+            { id: 'manager', name: 'Manager', business: 30000, reward: 500, direct: 2 },
+            { id: 'senior_manager', name: 'Senior Manager', business: 75000, reward: 1000, direct: 2 },
+            { id: 'director', name: 'Director', business: 150000, reward: 2500, direct: 2 },
+            { id: 'senior_director', name: 'Senior Director', business: 300000, reward: 5000, direct: 2 },
+            { id: 'diamond', name: 'Diamond', business: 750000, reward: 10000, direct: 2 }
+        ];
+
+        function getRankProgress(teamBusiness, qualifiedDirects, currentRankName) {
+            const currentIndex = RANK_LEVELS.findIndex(r => r.name === currentRankName);
+
+            if (currentIndex === -1 || currentIndex >= RANK_LEVELS.length - 1) {
+                if (currentIndex === RANK_LEVELS.length - 1) {
+                    return {
+                        currentRank: currentRankName,
+                        nextRank: null,
+                        businessProgress: 100,
+                        businessNeeded: 0,
+                        directNeeded: 0,
+                        reward: 0,
+                        isMaxRank: true
+                    };
+                }
+                const nextRank = RANK_LEVELS[1];
+                return {
+                    currentRank: 'Member',
+                    nextRank: nextRank,
+                    businessProgress: Math.min((teamBusiness / nextRank.business) * 100, 100),
+                    businessNeeded: Math.max(nextRank.business - teamBusiness, 0),
+                    directNeeded: Math.max((nextRank.direct || 0) - qualifiedDirects, 0),
+                    reward: nextRank.reward,
+                    isMaxRank: false
+                };
+            }
+
+            const nextRank = RANK_LEVELS[currentIndex + 1];
+            return {
+                currentRank: currentRankName,
+                nextRank: nextRank,
+                businessProgress: Math.min((teamBusiness / nextRank.business) * 100, 100),
+                businessNeeded: Math.max(nextRank.business - teamBusiness, 0),
+                directNeeded: Math.max((nextRank.direct || 0) - qualifiedDirects, 0),
+                reward: nextRank.reward,
+                isMaxRank: false
+            };
+        }
+
+        // ============================================================
+        // 🔥 CHECK AND UPDATE RANK
+        // ============================================================
+        async function checkAndUpdateRank(userId) {
+            try {
+                const userRef = ref(db, 'users/' + userId);
+                const result = await runTransaction(userRef, (currentData) => {
+                    if (!currentData) return { ...currentData };
+
+                    const teamBusiness = currentData.teamBusiness || 0;
+                    const qualifiedDirects = currentData.qualifiedDirects || 0;
+                    const currentRank = currentData.rank || 'Member';
+                    const rankRewardPaid = currentData.rankRewardPaid || {};
+
+                    let achievedRank = null;
+                    let rankUpgraded = false;
+                    let rankIndex = -1;
+
+                    for (let i = RANK_LEVELS.length - 1; i >= 0; i--) {
+                        const rank = RANK_LEVELS[i];
+                        if (teamBusiness >= rank.business && qualifiedDirects >= (rank.direct || 0)) {
+                            const currentIdx = RANK_LEVELS.findIndex(r => r.name === currentRank);
+                            if (i > currentIdx || currentRank === 'Member') {
+                                achievedRank = rank;
+                                rankIndex = i;
+                                rankUpgraded = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!rankUpgraded || !achievedRank || rankIndex <= 0) {
+                        return { ...currentData };
+                    }
+
+                    if (rankRewardPaid[achievedRank.id]) {
+                        return {
+                            ...currentData,
+                            rank: achievedRank.name,
+                            teamBusiness: teamBusiness,
+                            qualifiedDirects: qualifiedDirects
+                        };
+                    }
+
+                    // CREDIT REWARD TO DEPOSIT WALLET
+                    const depositWallet = currentData.depositWallet || 0;
+                    const newDepositWallet = depositWallet + achievedRank.reward;
+
+                    rankRewardPaid[achievedRank.id] = {
+                        paidAt: Date.now(),
+                        amount: achievedRank.reward,
+                        teamBusiness: teamBusiness,
+                        qualifiedDirects: qualifiedDirects
+                    };
+
+                    const transactions = currentData.transactions || {};
+                    const txId = 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                    transactions[txId] = {
+                        type: 'rank_reward',
+                        rank: achievedRank.name,
+                        reward: achievedRank.reward,
+                        currency: 'USDT',
+                        timestamp: Date.now(),
+                        date: new Date().toDateString(),
+                        status: 'completed',
+                        description: `🏆 Rank Achieved: ${achievedRank.name} - Reward $${achievedRank.reward}`
+                    };
+
+                    const notifications = currentData.notifications || {};
+                    const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                    notifications[notifId] = {
+                        title: '🎉 Rank Achieved!',
+                        message: `Congratulations! You achieved ${achievedRank.name} rank and earned $${achievedRank.reward} USDT.`,
+                        rank: achievedRank.name,
+                        reward: achievedRank.reward,
+                        read: false,
+                        timestamp: Date.now(),
+                        date: new Date().toDateString(),
+                        type: 'rank_reward'
+                    };
+
+                    setTimeout(() => {
+                        showToast(`🎉 Congratulations! You achieved ${achievedRank.name} rank! $${achievedRank.reward} USDT credited.`, 'success');
+                    }, 1000);
+
+                    return {
+                        ...currentData,
+                        rank: achievedRank.name,
+                        depositWallet: newDepositWallet,
+                        rankRewardPaid: rankRewardPaid,
+                        teamBusiness: teamBusiness,
+                        qualifiedDirects: qualifiedDirects,
+                        transactions: transactions,
+                        notifications: notifications
+                    };
+                });
+
+                return result.committed ? result.snapshot.val() : null;
+            } catch (error) {
+                console.error('Error checking rank:', error);
+                return null;
+            }
+        }
+
+        // ============================================================
+        // 🔥 RECALCULATE TEAM STRUCTURE
+        // ============================================================
+        async function recalculateTeamStructure(userId) {
+            try {
+                const usersSnap = await get(ref(db, 'users'));
+                if (!usersSnap.exists()) return null;
+                const allUsers = usersSnap.val();
+
+                let directReferrals = 0;
+                let qualifiedDirects = 0;
+
+                for (let uid in allUsers) {
+                    const u = allUsers[uid];
+                    if (u.parentUid === userId) {
+                        directReferrals++;
+                        if (u.rank && u.rank !== 'Member' && u.rank !== 'member') {
+                            qualifiedDirects++;
+                        }
+                    }
+                }
+
+                await update(ref(db, 'users/' + userId), {
+                    totalReferrals: directReferrals,
+                    qualifiedDirects: qualifiedDirects
+                });
+
+                return { directReferrals, qualifiedDirects };
+            } catch (error) {
+                console.error('Error recalculating team structure:', error);
+                return null;
+            }
+        }
+
+        // ============================================================
+        // 🔥 LOAD DASHBOARD
+        // ============================================================
+        function loadDashboard(userData) {
+            const u = userData;
+            const uid = u.uid || '';
+            const name = u.name || 'User';
+            const rank = u.rank || 'Member';
+            const isMember = rank === 'Member' || rank === 'member' || !rank;
+
+            const directReferrals = u.totalReferrals || 0;
+            const qualifiedDirects = u.qualifiedDirects || 0;
+            const teamBusiness = u.teamBusiness || 0;
+
+            const depositWallet = u.depositWallet || 0;
+            const incomeWallet = u.incomeWallet || 0;
+            const rewardWallet = u.rewardWallet || 0;
+            const rndWallet = u.rndWallet || 0;
+            const lockedRND = u.lockedRND || 0;
+            const releaseWallet = u.releaseWallet || 0;
+            const totalReleased = u.totalReleased || 0;
+            const activePackages = u.activePackages || 0;
+
+            const packages = u.packages || {};
+            const totalPackages = Object.keys(packages).length;
+
+            const progress = getRankProgress(teamBusiness, qualifiedDirects, rank);
+            const referralLink = `${window.location.origin}${window.location.pathname.replace('dashboard.html', 'register.html')}?ref=${uid}`;
+
+            // Update sidebar
+            document.getElementById('sidebarName').textContent = name;
+            document.getElementById('sidebarUserId').textContent = 'ID: ' + uid.substring(0, 12) + '...';
+            document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
+            const badge = document.getElementById('referralBadge');
+            if (badge) badge.textContent = directReferrals;
+
+            const rankClass = isMember ? 'rank-badge member' : 'rank-badge';
+            const rankMessage = isMember ? 'Start your journey!' : 'Keep going!';
+
+            document.getElementById('dashboardContent').innerHTML = `
+                <div class="row g-4">
+                    <!-- WELCOME SECTION -->
+                    <div class="col-12">
+                        <div class="welcome-section">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                <div>
+                                    <div class="greeting">WELCOME BACK</div>
+                                    <h2>Good ${getGreeting()}, <span>${name}</span></h2>
+                                    <div class="d-flex flex-wrap align-items-center gap-3 mt-2">
+                                        <span class="user-id-badge">
+                                            <i class="bi bi-person-badge me-1"></i>
+                                            <strong style="font-size:0.65rem;font-weight:600;">${uid.substring(0, 20)}...</strong>
+                                            <button class="copy-btn-small" onclick="window.copyUID('${uid}')">
+                                                <i class="bi bi-clipboard"></i> Copy
+                                            </button>
+                                        </span>
+                                        <span class="${rankClass}">
+                                            <span class="icon">🏆</span> ${rank}
+                                        </span>
+                                        <span class="rank-badge" style="background:rgba(46,204,113,0.08);border-color:rgba(46,204,113,0.15);color:#8899bb;">
+                                            <span class="icon">📊</span> Directs: ${directReferrals}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <a href="deposit.html" class="btn-primary-custom me-2"><i class="bi bi-plus-circle me-1"></i>Deposit</a>
+                                    <a href="withdraw.html" class="btn-outline-custom"><i class="bi bi-arrow-up-right me-1"></i>Withdraw</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RANK PROGRESS CARD -->
+                    <div class="col-12">
+                        <div class="rank-progress-card">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="rank-current">
+                                        <div class="rank-label">Current Rank</div>
+                                        <div class="rank-name">${rank}</div>
+                                        <div class="rank-badge-small">
+                                            <i class="bi bi-award-fill"></i> ${rankMessage}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    ${progress.nextRank ? `
+                                        <div class="rank-next">
+                                            <div class="rank-label">Next Rank</div>
+                                            <div class="rank-name">${progress.nextRank.name}</div>
+                                            <div class="rank-reward">💰 Reward: $${progress.nextRank.reward}</div>
+                                        </div>
+                                    ` : `
+                                        <div class="rank-next">
+                                            <div class="rank-label">🎯 Maximum Rank</div>
+                                            <div class="rank-name">${rank}</div>
+                                            <div class="rank-reward">🏆 You are at the top!</div>
+                                        </div>
+                                    `}
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="rank-requirements">
+                                        <div class="rank-label">Requirements</div>
+                                        ${progress.nextRank ? `
+                                            <div class="req-item">
+                                                <span>Team Business</span>
+                                                <span>${formatCurrency(teamBusiness)} / ${formatCurrency(progress.nextRank.business)}</span>
+                                            </div>
+                                            <div class="req-item">
+                                                <span>Qualified Directs</span>
+                                                <span>${qualifiedDirects} / ${progress.nextRank.direct || 0}</span>
+                                            </div>
+                                        ` : `
+                                            <div class="req-item">
+                                                <span>✅ All requirements met!</span>
+                                                <span>🏆</span>
+                                            </div>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${progress.nextRank ? `
+                                <div class="progress-container mt-3">
+                                    <div class="progress-labels">
+                                        <span>Progress to ${progress.nextRank.name}</span>
+                                        <span>${Math.round(progress.businessProgress)}%</span>
+                                    </div>
+                                    <div class="progress-bar-wrapper">
+                                        <div class="progress-bar-fill" style="width: ${Math.min(progress.businessProgress, 100)}%"></div>
+                                    </div>
+                                    <div class="progress-details">
+                                        <span>🏢 Business: ${formatCurrency(teamBusiness)} / ${formatCurrency(progress.nextRank.business)}</span>
+                                        <span>👥 Directs: ${qualifiedDirects} / ${progress.nextRank.direct || 0}</span>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="progress-container mt-3">
+                                    <div class="progress-labels">
+                                        <span>🎯 Maximum Rank Achieved</span>
+                                        <span>100%</span>
+                                    </div>
+                                    <div class="progress-bar-wrapper">
+                                        <div class="progress-bar-fill" style="width: 100%; background: linear-gradient(90deg, #fbbf24, #f59e0b);"></div>
+                                    </div>
+                                    <div class="progress-details">
+                                        <span>🏆 You are a ${rank}!</span>
+                                    </div>
+                                </div>
+                            `}
+                        </div>
+                    </div>
+
+                    <!-- TOP STATS -->
+                    <div class="col-12">
+                        <div class="stats-row">
+                            <div class="stat-box">
+                                <div class="number green">${directReferrals}</div>
+                                <div class="label">Direct Referrals</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="number blue">${qualifiedDirects}</div>
+                                <div class="label">Qualified Directs</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="number gold">${formatCurrency(teamBusiness)}</div>
+                                <div class="label">Team Business</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="number teal">${totalPackages}</div>
+                                <div class="label">Active Packages</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4 WALLETS -->
+                    <div class="col-12">
+                        <div class="wallet-grid">
+                            <div class="wallet-card">
+                                <div class="wallet-icon deposit"><i class="bi bi-wallet2"></i></div>
+                                <div class="wallet-amount green">${formatCurrency(depositWallet)}</div>
+                                <div class="wallet-label">Deposit Wallet</div>
+                                <div class="wallet-sub">USDT</div>
+                            </div>
+                            <div class="wallet-card">
+                                <div class="wallet-icon income"><i class="bi bi-graph-up-arrow"></i></div>
+                                <div class="wallet-amount teal">${formatCurrency(incomeWallet)}</div>
+                                <div class="wallet-label">Income Wallet</div>
+                                <div class="wallet-sub">USDT</div>
+                            </div>
+                            <div class="wallet-card">
+                                <div class="wallet-icon reward"><i class="bi bi-gift"></i></div>
+                                <div class="wallet-amount gold">${formatCurrency(rewardWallet)}</div>
+                                <div class="wallet-label">Reward Wallet</div>
+                                <div class="wallet-sub">USDT</div>
+                            </div>
+                            <div class="wallet-card">
+                                <div class="wallet-icon rnd"><i class="bi bi-database"></i></div>
+                                <div class="wallet-amount blue">${rndWallet.toFixed(4)}</div>
+                                <div class="wallet-label">RND Wallet</div>
+                                <div class="wallet-sub">RND</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DAILY RELEASE -->
+                    <div class="col-12">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="wallet-card" style="background:rgba(52,211,153,0.05);border-color:rgba(52,211,153,0.15);">
+                                    <div class="wallet-icon" style="background:rgba(52,211,153,0.12);color:#34d399;"><i class="bi bi-clock-history"></i></div>
+                                    <div class="wallet-amount teal">${releaseWallet.toFixed(4)} RND</div>
+                                    <div class="wallet-label">📅 Daily Release</div>
+                                    <div class="wallet-sub">Fixed Per Day</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="wallet-card" style="background:rgba(96,165,250,0.05);border-color:rgba(96,165,250,0.15);">
+                                    <div class="wallet-icon" style="background:rgba(96,165,250,0.12);color:#60a5fa;"><i class="bi bi-cash-stack"></i></div>
+                                    <div class="wallet-amount blue">${totalReleased.toFixed(4)} RND</div>
+                                    <div class="wallet-label">📊 Total Released</div>
+                                    <div class="wallet-sub">So Far</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="wallet-card" style="background:rgba(139,92,246,0.05);border-color:rgba(139,92,246,0.15);">
+                                    <div class="wallet-icon" style="background:rgba(139,92,246,0.12);color:#a78bfa;"><i class="bi bi-lock"></i></div>
+                                    <div class="wallet-amount purple">${lockedRND.toFixed(2)} RND</div>
+                                    <div class="wallet-label">🔒 Locked RND</div>
+                                    <div class="wallet-sub">Remaining</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- REFERRAL LINK -->
+                    <div class="col-12">
+                        <div class="card-glass">
+                            <div class="card-title"><i class="bi bi-link-45deg text-success me-2"></i>Your Referral Link</div>
+                            <div class="referral-box">
+                                <span class="referral-code">
+                                    <span class="highlight">${referralLink}</span>
+                                </span>
+                                <button class="copy-btn" id="copyReferralBtn"><i class="bi bi-clipboard me-1"></i>Copy</button>
+                            </div>
+                            <div class="mt-2 d-flex flex-wrap gap-3">
+                                <span class="text-muted small"><i class="bi bi-people me-1"></i>Direct: <strong style="color:#2ecc71;">${directReferrals}</strong></span>
+                                <span class="text-muted small"><i class="bi bi-award me-1"></i>Qualified: <strong style="color:#fbbf24;">${qualifiedDirects}</strong></span>
+                                <span class="text-muted small"><i class="bi bi-uid me-1"></i>UID: <strong style="color:#60a5fa;font-size:0.6rem;">${uid.substring(0, 16)}...</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUICK LINKS -->
+                    <div class="col-12">
+                        <div class="card-glass">
+                            <div class="card-title"><i class="bi bi-grid-3x3-gap-fill text-success me-2"></i>Quick Links</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="deposit.html" class="btn-primary-custom"><i class="bi bi-arrow-down-circle me-1"></i>Deposit</a>
+                                <a href="withdraw.html" class="btn-outline-custom"><i class="bi bi-arrow-up-circle me-1"></i>Withdraw</a>
+                                <a href="referral.html" class="btn-outline-custom"><i class="bi bi-people me-1"></i>Referrals</a>
+                                <a href="packages.html" class="btn-outline-custom"><i class="bi bi-box-seam me-1"></i>Packages</a>
+                                <a href="profile.html" class="btn-outline-custom"><i class="bi bi-person me-1"></i>Profile</a>
+                                <a href="rank.html" class="btn-outline-custom"><i class="bi bi-trophy me-1"></i>Rank</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Copy Referral Link
+            document.getElementById('copyReferralBtn')?.addEventListener('click', () => {
+                copyToClipboard(referralLink);
+                const btn = document.getElementById('copyReferralBtn');
+                btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Copied!';
+                setTimeout(() => { btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy'; }, 2000);
+            });
+        }
+
+        // ============================================================
+        // 🔥 COPY UID - GLOBAL FUNCTION
+        // ============================================================
+        window.copyUID = function(uid) {
+            copyToClipboard(uid);
+        };
+
+        // ============================================================
+        // 🔥 MAIN - AUTH STATE
+        // ============================================================
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = LOGIN_URL;
+                return;
+            }
+
+            try {
+                const userSnap = await get(ref(db, 'users/' + user.uid));
+                if (!userSnap.exists()) {
+                    document.getElementById('dashboardContent').innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="bi bi-exclamation-triangle text-danger fs-1 d-block mb-3"></i>
+                            <h4>Profile Not Found</h4>
+                            <p class="text-muted">Please register first to access your dashboard.</p>
+                            <a href="register.html" class="btn btn-primary-custom mt-3">Register Now</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const u = userSnap.val();
+
+                if (u.banned === true) {
+                    await signOut(auth);
+                    alert('Your account has been banned.');
+                    window.location.href = LOGIN_URL;
+                    return;
+                }
+
+                // Recalculate team structure
+                await recalculateTeamStructure(user.uid);
+
+                // Check and update rank
+                await checkAndUpdateRank(user.uid);
+
+                // Get updated data
+                const updatedSnap = await get(ref(db, 'users/' + user.uid));
+                if (updatedSnap.exists()) {
+                    loadDashboard(updatedSnap.val());
+                }
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('dashboardContent').innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="bi bi-exclamation-triangle text-danger fs-1 d-block mb-3"></i>
+                        <h4>Error Loading Dashboard</h4>
+                        <p class="text-muted">${error.message || 'Please check your internet connection.'}</p>
+                        <button class="btn btn-primary-custom mt-3" onclick="location.reload()">Refresh</button>
+                    </div>
+                `;
+            }
+        });
+    </script>
 </body>
 </html>
