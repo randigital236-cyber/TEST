@@ -21,8 +21,8 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getDatabase(app);
 
-// Constants
-export const DOMAIN = "https://test.randigital.in"; // या v2.randigital.in
-export const LOGIN_URL = `${DOMAIN}/login.html`;
-export const REGISTER_URL = `${DOMAIN}/register.html`;
-export const DASHBOARD_URL = `${DOMAIN}/dashboard.html`;
+// Constants - GitHub Pages URL
+export const DOMAIN = "https://randigital236-cyber.github.io/TEST/";
+export const LOGIN_URL = `${DOMAIN}login.html`;
+export const REGISTER_URL = `${DOMAIN}register.html`;
+export const DASHBOARD_URL = `${DOMAIN}dashboard.html`;
