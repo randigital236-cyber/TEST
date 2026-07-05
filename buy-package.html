@@ -88,8 +88,72 @@
 </script>
 
 <script type="module">
-// Main entry - auto loads buy-package.js
-import './js/buy-package.js';
+import { onAuthChange, signOut, getCurrentUser } from './js/auth.js';
+import { getRNDPrice, getUserData } from './js/utils.js';
+import { showToast } from './js/toast.js';
+import { initSidebar, updateSidebarUser } from './js/sidebar.js';
+import { PLANS, getPackageHistory } from './js/package-service.js';
+import { renderPackageUI, attachPlanListeners, attachFormListeners, updateWalletDisplays, showErrorState } from './js/package-ui.js';
+
+async function loadPackagePage(user) {
+    try {
+        const price = await getRNDPrice();
+        const userData = await getUserData(user.uid);
+        if (!userData) {
+            window.location.href = 'dashboard.html';
+            return;
+        }
+        
+        const username = userData.username || userData.referralCode || 'USER';
+        const name = userData.name || 'User';
+        updateSidebarUser(name, username, userData.totalReferrals || 0);
+        
+        const packageHistory = getPackageHistory(userData);
+        const container = document.getElementById('packageContent');
+        
+        renderPackageUI(container, {
+            userData,
+            packageHistory,
+            rndPrice: price
+        });
+        
+        attachPlanListeners(PLANS, price);
+        attachFormListeners({
+            userId: user.uid,
+            userData: userData,
+            rndPrice: price,
+            plans: PLANS
+        });
+        
+        updateWalletDisplays(user.uid);
+        initSidebar();
+        
+        document.getElementById('supportLink')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.open('support.html', '_blank', 'noopener,noreferrer');
+        });
+        
+        document.getElementById('logoutBtnSidebar')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            await signOut();
+        });
+
+    } catch (error) {
+        console.error('Error loading page:', error);
+        showErrorState(
+            document.getElementById('packageContent'),
+            error.message || 'Please check your internet connection.'
+        );
+    }
+}
+
+onAuthChange(async (user) => {
+    if (!user) {
+        window.location.href = 'login.html';
+        return;
+    }
+    await loadPackagePage(user);
+});
 </script>
 </body>
 </html>
