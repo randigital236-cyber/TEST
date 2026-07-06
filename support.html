@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RND Staking - Support</title>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Support CSS -->
+    <link rel="stylesheet" href="support.css" />
+</head>
+<body>
+
+    <!-- ============================================================
+    TOP NAVBAR
+    ============================================================ -->
+    <nav class="top-nav" id="topNav">
+        <a href="dashboard.html" class="brand">
+            <div class="logo">R</div>
+            <span>RND Staking</span>
+        </a>
+
+        <div class="nav-actions">
+            <div class="user-badge" id="userBadge" onclick="toggleSidebar()">
+                <div class="avatar" id="sidebarAvatar">U</div>
+                <span class="name" id="sidebarName">User</span>
+            </div>
+            <button class="menu-btn" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+    SIDEBAR
+    ============================================================ -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar-panel" id="sidebarPanel">
+        <div class="sidebar-header">
+            <div class="brand">
+                <div class="logo">R</div>
+                <span>RND Staking</span>
+            </div>
+            <button class="close-btn" id="sidebarClose">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="avatar" id="sidebarAvatarLarge">U</div>
+            <div class="info">
+                <div class="name" id="sidebarNameLarge">User</div>
+                <div class="id" id="sidebarUserId">ID: USER123</div>
+                <div class="badge">
+                    <i class="bi bi-people"></i> <span id="referralBadge">0</span> Referrals
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Main</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="bi bi-grid"></i> Dashboard
+            </a>
+            <a href="buy-package.html" class="nav-item">
+                <i class="bi bi-box-seam"></i> Buy Package
+            </a>
+            <a href="deposit.html" class="nav-item">
+                <i class="bi bi-arrow-down-circle"></i> Deposit
+            </a>
+            <a href="withdrawal.html" class="nav-item">
+                <i class="bi bi-arrow-up-circle"></i> Withdraw
+            </a>
+
+            <div class="nav-label">History</div>
+            <a href="transactions.html" class="nav-item">
+                <i class="bi bi-clock-history"></i> Transactions
+            </a>
+            <a href="referrals.html" class="nav-item">
+                <i class="bi bi-share"></i> Referrals
+                <span class="badge-count" id="referralBadgeSidebar">0</span>
+            </a>
+
+            <div class="nav-label">Account</div>
+            <a href="profile.html" class="nav-item">
+                <i class="bi bi-person"></i> Profile
+            </a>
+            <a href="support.html" class="nav-item active">
+                <i class="bi bi-headset"></i> Support
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="nav-item" id="logoutBtnSidebar">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- ============================================================
+    MAIN CONTENT
+    ============================================================ -->
+    <main class="main-content">
+
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p id="loadingStatus">Loading support...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="errorState">
+            <i class="bi bi-exclamation-triangle"></i>
+            <h4>Error Loading Page</h4>
+            <p id="errorMessage">Please check your internet connection.</p>
+            <button class="btn-retry" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Support Content -->
+        <div id="supportContent">
+
+            <!-- Header -->
+            <div class="support-header">
+                <h1><i class="bi bi-headset"></i> <span>Support</span></h1>
+                <p>We're here to help you 24/7</p>
+            </div>
+
+            <!-- FAQ Section -->
+            <div class="faq-section">
+                <h2><i class="bi bi-question-circle"></i> Frequently Asked Questions</h2>
+                
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I buy a package?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>To buy a package, navigate to the <strong>Buy Package</strong> page from the sidebar. Select your preferred plan (6 Months, 12 Months, or 18 Months), enter the amount, choose your wallet, and click <strong>Buy Now</strong>. The RND tokens will be locked in your account and daily releases will start from the next day.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How does the referral commission work?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Our referral system offers 5 levels of commission:</p>
+                            <ul>
+                                <li><strong>Level 1:</strong> 8% (Direct Referrals)</li>
+                                <li><strong>Level 2:</strong> 4%</li>
+                                <li><strong>Level 3:</strong> 2%</li>
+                                <li><strong>Level 4:</strong> 1%</li>
+                                <li><strong>Level 5:</strong> 1%</li>
+                            </ul>
+                            <p>When your referred friends purchase packages, you earn commission on their investments. The commission is automatically credited to your referral wallet.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What is the minimum investment amount?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>The minimum investment depends on the plan:</p>
+                            <ul>
+                                <li><strong>6 Months Plan:</strong> $10 USDT</li>
+                                <li><strong>12 Months Plan:</strong> $100 USDT</li>
+                                <li><strong>18 Months Plan:</strong> $200 USDT</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How do I withdraw my earnings?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>To withdraw your funds:</p>
+                            <ol>
+                                <li>Go to the <strong>Withdraw</strong> page from the sidebar.</li>
+                                <li>Select your wallet (Deposit, Referral, or RND Wallet).</li>
+                                <li>Enter the amount (minimum 10 USDT/RND).</li>
+                                <li>Enter your external wallet address (BEP-20).</li>
+                                <li>Click <strong>Withdraw</strong> and wait for processing (24-48 hours).</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>What happens to my daily releases?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Your daily releases are automatically calculated and credited to your RND wallet every day. If you miss a day, the releases are accumulated and credited when you log in next time. The release amount depends on your package and the remaining RND in your locked wallet.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>Is there any fee for deposits or withdrawals?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p><strong>Deposits:</strong> 0% fee.</p>
+                            <p><strong>Withdrawals:</strong> 1 USDT fee for USDT withdrawals (BEP-20). RND withdrawals have 0 fee.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>How can I contact support?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>You can reach our support team through:</p>
+                            <ul>
+                                <li><strong>Email:</strong> support@randigital.in</li>
+                                <li><strong>Phone:</strong> +91-XXXXXXXXXX</li>
+                            </ul>
+                            <p>Our support team is available 24/7 to assist you with any queries.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Section -->
+            <div class="contact-section">
+                <h2><i class="bi bi-envelope"></i> Contact Us</h2>
+                <p>Have a question not listed above? Fill out the form below and we'll get back to you within 24 hours.</p>
+
+                <form id="supportForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="supportName">Full Name</label>
+                            <input type="text" id="supportName" class="form-control" placeholder="Enter your name" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="supportEmail">Email Address</label>
+                            <input type="email" id="supportEmail" class="form-control" placeholder="Enter your email" required />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="supportSubject">Subject</label>
+                        <input type="text" id="supportSubject" class="form-control" placeholder="Brief subject" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="supportMessage">Message</label>
+                        <textarea id="supportMessage" class="form-control" rows="5" placeholder="Describe your issue in detail..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn-primary" id="supportSubmitBtn">
+                        <i class="bi bi-send me-1"></i> Send Message
+                    </button>
+                </form>
+
+                <!-- Success State -->
+                <div class="support-success" id="supportSuccess">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <h3>Message Sent! 🎉</h3>
+                    <p>Thank you for reaching out. Our support team will get back to you within 24 hours.</p>
+                    <button class="btn-secondary" onclick="resetSupportForm()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Send Another Message
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Contact -->
+            <div class="quick-contact">
+                <div class="quick-item">
+                    <i class="bi bi-envelope"></i>
+                    <span>support@randigital.in</span>
+                </div>
+                <div class="quick-item">
+                    <i class="bi bi-telephone"></i>
+                    <span>+91-XXXXXXXXXX</span>
+                </div>
+                <div class="quick-item">
+                    <i class="bi bi-clock"></i>
+                    <span>24/7 Support Available</span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ============================================================
+    TOAST CONTAINER
+    ============================================================ -->
+    <div id="toastContainer"></div>
+
+    <!-- ============================================================
+    SCRIPTS
+    ============================================================ -->
+    <script type="importmap">
+    {
+        "imports": {
+            "./": "./"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import { onAuthChange } from './auth.js';
+        import { loadSupportPage, toggleFaq, resetSupportForm } from './support.js';
+        import { initSidebar, openSidebar, closeSidebar } from './sidebar.js';
+
+        // Initialize sidebar
+        initSidebar();
+
+        // Expose sidebar functions globally for onclick
+        window.openSidebar = openSidebar;
+        window.closeSidebar = closeSidebar;
+        window.toggleSidebar = function() {
+            if (document.getElementById('sidebarPanel').classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        };
+
+        // Expose support functions globally
+        window.toggleFaq = toggleFaq;
+        window.resetSupportForm = resetSupportForm;
+
+        // Auth state observer
+        onAuthChange(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            await loadSupportPage(user);
+        });
+    </script>
+
+</body>
+</html>

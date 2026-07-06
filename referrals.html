@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RND Staking - Referrals</title>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Referrals CSS -->
+    <link rel="stylesheet" href="referrals.css" />
+</head>
+<body>
+
+    <!-- ============================================================
+    TOP NAVBAR
+    ============================================================ -->
+    <nav class="top-nav" id="topNav">
+        <a href="dashboard.html" class="brand">
+            <div class="logo">R</div>
+            <span>RND Staking</span>
+        </a>
+
+        <div class="nav-actions">
+            <div class="user-badge" id="userBadge" onclick="toggleSidebar()">
+                <div class="avatar" id="sidebarAvatar">U</div>
+                <span class="name" id="sidebarName">User</span>
+            </div>
+            <button class="menu-btn" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+    SIDEBAR
+    ============================================================ -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar-panel" id="sidebarPanel">
+        <div class="sidebar-header">
+            <div class="brand">
+                <div class="logo">R</div>
+                <span>RND Staking</span>
+            </div>
+            <button class="close-btn" id="sidebarClose">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="avatar" id="sidebarAvatarLarge">U</div>
+            <div class="info">
+                <div class="name" id="sidebarNameLarge">User</div>
+                <div class="id" id="sidebarUserId">ID: USER123</div>
+                <div class="badge">
+                    <i class="bi bi-people"></i> <span id="referralBadge">0</span> Referrals
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Main</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="bi bi-grid"></i> Dashboard
+            </a>
+            <a href="buy-package.html" class="nav-item">
+                <i class="bi bi-box-seam"></i> Buy Package
+            </a>
+            <a href="deposit.html" class="nav-item">
+                <i class="bi bi-arrow-down-circle"></i> Deposit
+            </a>
+            <a href="withdrawal.html" class="nav-item">
+                <i class="bi bi-arrow-up-circle"></i> Withdraw
+            </a>
+
+            <div class="nav-label">History</div>
+            <a href="transactions.html" class="nav-item">
+                <i class="bi bi-clock-history"></i> Transactions
+            </a>
+            <a href="referrals.html" class="nav-item active">
+                <i class="bi bi-share"></i> Referrals
+                <span class="badge-count" id="referralBadgeSidebar">0</span>
+            </a>
+
+            <div class="nav-label">Account</div>
+            <a href="profile.html" class="nav-item">
+                <i class="bi bi-person"></i> Profile
+            </a>
+            <a href="support.html" class="nav-item">
+                <i class="bi bi-headset"></i> Support
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="nav-item" id="logoutBtnSidebar">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- ============================================================
+    MAIN CONTENT
+    ============================================================ -->
+    <main class="main-content">
+
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p id="loadingStatus">Loading referral details...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="errorState">
+            <i class="bi bi-exclamation-triangle"></i>
+            <h4>Error Loading Page</h4>
+            <p id="errorMessage">Please check your internet connection.</p>
+            <button class="btn-retry" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Referrals Content -->
+        <div id="referralsContent">
+
+            <!-- Header -->
+            <div class="referrals-header">
+                <h1><i class="bi bi-share"></i> <span>Referrals</span></h1>
+                <p>Invite friends and earn commission on their investments</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Total Referrals</div>
+                    <div class="value blue" id="totalReferrals">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Level 1</div>
+                    <div class="value green" id="level1Count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Level 2</div>
+                    <div class="value gold" id="level2Count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Level 3</div>
+                    <div class="value purple" id="level3Count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Level 4</div>
+                    <div class="value pink" id="level4Count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Level 5</div>
+                    <div class="value orange" id="level5Count">0</div>
+                </div>
+            </div>
+
+            <!-- Referral Link -->
+            <div class="referral-link-card">
+                <div class="card-title"><i class="bi bi-link-45deg"></i> Your Referral Link</div>
+                <div class="link-box">
+                    <span class="link-text" id="referralLinkDisplay">Loading...</span>
+                    <button class="copy-btn" id="copyReferralBtn" title="Copy Link">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+                <div class="link-hint">
+                    <i class="bi bi-info-circle me-1"></i> Share this link with your friends. They will be credited as your referral when they sign up.
+                </div>
+            </div>
+
+            <!-- Commission Table -->
+            <div class="commission-card">
+                <div class="card-title"><i class="bi bi-trophy"></i> Commission Structure</div>
+                <div class="commission-table">
+                    <div class="commission-row header">
+                        <span>Level</span>
+                        <span>Commission</span>
+                        <span>Earnings</span>
+                    </div>
+                    <div class="commission-row">
+                        <span>Level 1</span>
+                        <span class="rate">8%</span>
+                        <span class="amount green" id="level1Earn">0.00 USDT</span>
+                    </div>
+                    <div class="commission-row">
+                        <span>Level 2</span>
+                        <span class="rate">4%</span>
+                        <span class="amount blue" id="level2Earn">0.00 USDT</span>
+                    </div>
+                    <div class="commission-row">
+                        <span>Level 3</span>
+                        <span class="rate">2%</span>
+                        <span class="amount gold" id="level3Earn">0.00 USDT</span>
+                    </div>
+                    <div class="commission-row">
+                        <span>Level 4</span>
+                        <span class="rate">1%</span>
+                        <span class="amount purple" id="level4Earn">0.00 USDT</span>
+                    </div>
+                    <div class="commission-row">
+                        <span>Level 5</span>
+                        <span class="rate">1%</span>
+                        <span class="amount pink" id="level5Earn">0.00 USDT</span>
+                    </div>
+                    <div class="commission-row total">
+                        <span>Total Earnings</span>
+                        <span></span>
+                        <span class="amount gold" id="totalReferralEarnings">0.00 USDT</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referral History -->
+            <div class="history-header">
+                <h3><i class="bi bi-clock-history me-2"></i>Referral History</h3>
+            </div>
+
+            <div class="history-list" id="referralHistoryContainer">
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No referral history yet</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ============================================================
+    TOAST CONTAINER
+    ============================================================ -->
+    <div id="toastContainer"></div>
+
+    <!-- ============================================================
+    SCRIPTS
+    ============================================================ -->
+    <script type="importmap">
+    {
+        "imports": {
+            "./": "./"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import { onAuthChange } from './auth.js';
+        import { loadReferralsPage } from './referrals.js';
+        import { initSidebar, openSidebar, closeSidebar } from './sidebar.js';
+
+        // Initialize sidebar
+        initSidebar();
+
+        // Expose sidebar functions globally for onclick
+        window.openSidebar = openSidebar;
+        window.closeSidebar = closeSidebar;
+        window.toggleSidebar = function() {
+            if (document.getElementById('sidebarPanel').classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        };
+
+        // Auth state observer
+        onAuthChange(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            await loadReferralsPage(user);
+        });
+    </script>
+
+</body>
+</html>

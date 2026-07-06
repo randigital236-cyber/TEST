@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RND Staking - Transactions</title>
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <!-- Transactions CSS -->
+    <link rel="stylesheet" href="transactions.css" />
+</head>
+<body>
+
+    <!-- ============================================================
+    TOP NAVBAR
+    ============================================================ -->
+    <nav class="top-nav" id="topNav">
+        <a href="dashboard.html" class="brand">
+            <div class="logo">R</div>
+            <span>RND Staking</span>
+        </a>
+
+        <div class="nav-actions">
+            <div class="user-badge" id="userBadge" onclick="toggleSidebar()">
+                <div class="avatar" id="sidebarAvatar">U</div>
+                <span class="name" id="sidebarName">User</span>
+            </div>
+            <button class="menu-btn" id="sidebarToggle" aria-label="Toggle Sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ============================================================
+    SIDEBAR
+    ============================================================ -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar-panel" id="sidebarPanel">
+        <div class="sidebar-header">
+            <div class="brand">
+                <div class="logo">R</div>
+                <span>RND Staking</span>
+            </div>
+            <button class="close-btn" id="sidebarClose">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-user">
+            <div class="avatar" id="sidebarAvatarLarge">U</div>
+            <div class="info">
+                <div class="name" id="sidebarNameLarge">User</div>
+                <div class="id" id="sidebarUserId">ID: USER123</div>
+                <div class="badge">
+                    <i class="bi bi-people"></i> <span id="referralBadge">0</span> Referrals
+                </div>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-label">Main</div>
+            <a href="dashboard.html" class="nav-item">
+                <i class="bi bi-grid"></i> Dashboard
+            </a>
+            <a href="buy-package.html" class="nav-item">
+                <i class="bi bi-box-seam"></i> Buy Package
+            </a>
+            <a href="deposit.html" class="nav-item">
+                <i class="bi bi-arrow-down-circle"></i> Deposit
+            </a>
+            <a href="withdrawal.html" class="nav-item">
+                <i class="bi bi-arrow-up-circle"></i> Withdraw
+            </a>
+
+            <div class="nav-label">History</div>
+            <a href="transactions.html" class="nav-item active">
+                <i class="bi bi-clock-history"></i> Transactions
+            </a>
+            <a href="referrals.html" class="nav-item">
+                <i class="bi bi-share"></i> Referrals
+                <span class="badge-count" id="referralBadgeSidebar">0</span>
+            </a>
+
+            <div class="nav-label">Account</div>
+            <a href="profile.html" class="nav-item">
+                <i class="bi bi-person"></i> Profile
+            </a>
+            <a href="support.html" class="nav-item">
+                <i class="bi bi-headset"></i> Support
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="nav-item" id="logoutBtnSidebar">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- ============================================================
+    MAIN CONTENT
+    ============================================================ -->
+    <main class="main-content">
+
+        <!-- Loading State -->
+        <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <p id="loadingStatus">Loading transactions...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="errorState">
+            <i class="bi bi-exclamation-triangle"></i>
+            <h4>Error Loading Page</h4>
+            <p id="errorMessage">Please check your internet connection.</p>
+            <button class="btn-retry" onclick="location.reload()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Transactions Content -->
+        <div id="transactionsContent">
+
+            <!-- Header -->
+            <div class="transactions-header">
+                <h1><i class="bi bi-clock-history"></i> <span>Transactions</span></h1>
+                <p>View your complete transaction history</p>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="label">Total Transactions</div>
+                    <div class="value blue" id="totalTransactions">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Deposits</div>
+                    <div class="value green" id="totalDeposits">$0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Withdrawals</div>
+                    <div class="value red" id="totalWithdrawals">$0.00</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Total Referral Commission</div>
+                    <div class="value gold" id="totalCommission">$0.00</div>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label for="filterType">Type</label>
+                    <select id="filterType">
+                        <option value="all">All</option>
+                        <option value="wallet_credit">Deposits</option>
+                        <option value="wallet_debit">Withdrawals</option>
+                        <option value="package_purchase">Package Purchases</option>
+                        <option value="daily_release">Daily Releases</option>
+                        <option value="referral_commission">Referral Commissions</option>
+                        <option value="wallet_transfer">Transfers</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterStatus">Status</label>
+                    <select id="filterStatus">
+                        <option value="all">All</option>
+                        <option value="completed">Completed</option>
+                        <option value="pending">Pending</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterDate">Date</label>
+                    <select id="filterDate">
+                        <option value="7">Last 7 Days</option>
+                        <option value="30" selected>Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+                <button class="btn-filter" id="applyFilter">
+                    <i class="bi bi-funnel me-1"></i> Apply
+                </button>
+                <button class="btn-filter reset" id="resetFilter">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                </button>
+            </div>
+
+            <!-- Transaction List -->
+            <div class="transaction-list" id="transactionList">
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No transactions found</p>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ============================================================
+    TOAST CONTAINER
+    ============================================================ -->
+    <div id="toastContainer"></div>
+
+    <!-- ============================================================
+    SCRIPTS
+    ============================================================ -->
+    <script type="importmap">
+    {
+        "imports": {
+            "./": "./"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import { onAuthChange } from './auth.js';
+        import { loadTransactionsPage } from './transactions.js';
+        import { initSidebar, openSidebar, closeSidebar } from './sidebar.js';
+
+        // Initialize sidebar
+        initSidebar();
+
+        // Expose sidebar functions globally for onclick
+        window.openSidebar = openSidebar;
+        window.closeSidebar = closeSidebar;
+        window.toggleSidebar = function() {
+            if (document.getElementById('sidebarPanel').classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        };
+
+        // Auth state observer
+        onAuthChange(async (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+            await loadTransactionsPage(user);
+        });
+    </script>
+
+</body>
+</html>

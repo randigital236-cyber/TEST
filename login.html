@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Login · RND Staking</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0e1a;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-wrapper {
+            max-width: 420px;
+            width: 100%;
+            background: #1a2236;
+            border-radius: 24px;
+            padding: 40px 32px;
+            border: 1px solid #2a3a5a;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+        }
+        .login-wrapper .brand {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .login-wrapper .brand .logo {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 800;
+            color: #fff;
+            margin: 0 auto 12px;
+        }
+        .login-wrapper .brand h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .login-wrapper .brand p {
+            color: #8899bb;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #8899bb;
+            margin-bottom: 6px;
+        }
+        .form-group .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: #0f1729;
+            border: 1px solid #2a3a5a;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        .form-group .input-wrapper:focus-within {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34,197,94,0.1);
+        }
+        .form-group .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            color: #5a6a8a;
+            font-size: 18px;
+        }
+        .form-group .input-wrapper input {
+            width: 100%;
+            padding: 14px 14px 14px 46px;
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 15px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .form-group .input-wrapper input::placeholder {
+            color: #5a6a8a;
+        }
+        .form-group .input-wrapper .toggle-password {
+            position: absolute;
+            right: 14px;
+            background: none;
+            border: none;
+            color: #5a6a8a;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+        }
+        .form-group .input-wrapper .toggle-password:hover {
+            color: #8899bb;
+        }
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .form-options .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8899bb;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .form-options .remember-me input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #22c55e;
+            cursor: pointer;
+        }
+        .form-options .forgot-link {
+            color: #22c55e;
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .form-options .forgot-link:hover {
+            text-decoration: underline;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(34,197,94,0.3);
+        }
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .btn-login .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 20px 0;
+            color: #5a6a8a;
+            font-size: 13px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #2a3a5a;
+        }
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid #2a3a5a;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-google:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: #22c55e;
+        }
+        .btn-google i { font-size: 20px; color: #ea4335; }
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #8899bb;
+            font-size: 14px;
+        }
+        .register-link a {
+            color: #22c55e;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .register-link a:hover { text-decoration: underline; }
+        .error-msg {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #ef4444;
+            font-size: 14px;
+            display: none;
+            margin-bottom: 16px;
+        }
+        .error-msg.show { display: block; }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+            width: 100%;
+        }
+        .toast-custom {
+            background: #1a2236;
+            border: 1px solid #2a3a5a;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: slideIn 0.4s ease;
+            margin-bottom: 10px;
+            color: #fff;
+            font-size: 14px;
+            border-left: 4px solid #22c55e;
+        }
+        .toast-custom.error { border-left-color: #ef4444; }
+        .toast-custom i { font-size: 20px; }
+        .toast-custom .toast-msg { flex: 1; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 480px) {
+            .login-wrapper { padding: 28px 20px; }
+            .form-options { flex-direction: column; gap: 12px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="login-wrapper">
+        <!-- Brand -->
+        <div class="brand">
+            <div class="logo">R</div>
+            <h1>RND Staking</h1>
+            <p>Welcome back! Login to your account</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-msg" id="errorMsg"></div>
+
+        <!-- Login Form -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email Address</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required autocomplete="email">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password">
+                    <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-options">
+                <label class="remember-me">
+                    <input type="checkbox" id="rememberMe"> Remember Me
+                </label>
+                <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Login
+            </button>
+        </form>
+
+        <div class="divider">or continue with</div>
+
+        <button class="btn-google" id="googleLoginBtn">
+            <i class="bi bi-google"></i> Continue with Google
+        </button>
+
+        <div class="register-link">
+            Don't have an account? <a href="register.html">Create Account</a>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "./": "./"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import { login, signInWithGoogle, onAuthChange } from './auth.js';
+        import { showToast } from './toast.js';
+
+        // DOM References
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('loginEmail');
+        const passwordInput = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const googleBtn = document.getElementById('googleLoginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const rememberMe = document.getElementById('rememberMe');
+
+        // Toggle Password
+        window.togglePassword = function(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'bi bi-eye';
+            }
+        };
+
+        // Show Error
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.className = 'error-msg show';
+            setTimeout(() => {
+                errorMsg.className = 'error-msg';
+            }, 5000);
+        }
+
+        // Login Handler
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const remember = rememberMe.checked;
+
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner"></span> Logging in...';
+
+            try {
+                const result = await login(email, password, remember);
+                if (result.success) {
+                    showToast('✅ Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showError(result.error || 'Login failed. Please try again.');
+                    showToast('❌ ' + (result.error || 'Login failed'), 'error');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> Login';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('An unexpected error occurred. Please try again.');
+                showToast('❌ An unexpected error occurred', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i> Login';
+            }
+        });
+
+        // Google Login
+        googleBtn.addEventListener('click', async () => {
+            googleBtn.disabled = true;
+            googleBtn.innerHTML = '<span class="spinner"></span> Connecting...';
+
+            try {
+                const result = await signInWithGoogle(null, rememberMe.checked);
+                if (result.redirect) {
+                    showToast('⏳ Redirecting to Google...', 'info');
+                    return;
+                }
+                if (result.success) {
+                    showToast('✅ Google login successful!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showError(result.error || 'Google login failed');
+                    showToast('❌ ' + (result.error || 'Google login failed'), 'error');
+                    googleBtn.disabled = false;
+                    googleBtn.innerHTML = '<i class="bi bi-google"></i> Continue with Google';
+                }
+            } catch (error) {
+                console.error('Google login error:', error);
+                showError('Google login failed. Please try again.');
+                showToast('❌ Google login failed', 'error');
+                googleBtn.disabled = false;
+                googleBtn.innerHTML = '<i class="bi bi-google"></i> Continue with Google';
+            }
+        });
+
+        // Auto-login check
+        onAuthChange((user) => {
+            if (user) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+
+</body>
+</html>
