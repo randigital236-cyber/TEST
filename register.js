@@ -1,513 +1,358 @@
-// ============================================================
-// RND STAKING PLATFORM V2 - REGISTER.JS
-// ============================================================
-// 📌 PROJECT: mywebsite-600d3
-// 📌 RULE: Firebase Auth UID = User ID = Referral Code
-// 📌 RULE: NO get(ref(db,'users')) - Only Direct Path Reads
-// ============================================================
-
-import { 
-    auth, 
-    database,
+// register.js - FINAL VERSION
+import { auth, db } from './firebase.js';
+import {
     createUserWithEmailAndPassword,
     updateProfile,
-    onAuthStateChanged,
+    onAuthStateChanged
+} from "firebase/auth";
+import {
     ref,
     set,
     get,
-    runTransaction,
-    serverTimestamp,
-    getCurrentTimestamp,
-    getCurrentDate,
-    validateEmail,
-    validatePassword,
-    validateName,
-    validatePasswordMatch,
-    generateTransactionID,
-    hashEmail,
-    isUsernameAvailable,
-    verifyReferral,
-    saveUserWithIndexes,
-    createBackup,
-    createTransaction,
-    createLog
-} from './firebase.js';
+    update
+} from "firebase/database";
 
 // ============================================================
-// 🔥 DOM REFERENCES
-// ============================================================
-const form = document.getElementById('registerForm');
-const nameInput = document.getElementById('regName');
-const emailInput = document.getElementById('regEmail');
-const passwordInput = document.getElementById('regPassword');
-const confirmPasswordInput = document.getElementById('regConfirmPassword');
-const referralInput = document.getElementById('regRef');
-const registerBtn = document.getElementById('registerBtn');
-const referralNotice = document.getElementById('referralNotice');
-const referralNoticeText = document.getElementById('referralNoticeText');
-const toastContainer = document.getElementById('toastContainer');
-
-// ============================================================
-// 🔥 URL REFERRAL CODE
+// REFERRAL CODE FROM URL
 // ============================================================
 let referralCodeFromURL = '';
 
 function getReferralFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    if (ref) {
-        referralCodeFromURL = ref;
-        referralInput.value = ref;
-        referralNotice.className = 'referral-notice active';
-        referralNoticeText.textContent = '✅ Referral code auto-filled from link!';
-        console.log('✅ Referral code from URL:', ref);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+        referralCodeFromURL = refCode;
+        return refCode;
     }
+    return '';
 }
-getReferralFromURL();
+
+// Auto-fill referral from URL
+const refFromURL = getReferralFromURL();
+if (refFromURL) {
+    document.getElementById('regRef').value = refFromURL;
+    document.getElementById('referralNoticeText').textContent = '✅ Referral code auto-filled from link!';
+    document.getElementById('referralNotice').className = 'referral-notice active';
+}
 
 // ============================================================
-// 🔥 REFERRAL INPUT LISTENER
+// TOAST NOTIFICATIONS
 // ============================================================
-referralInput.addEventListener('input', function() {
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    toast.className = `toast-custom ${type}`;
+    const icon = type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-exclamation-triangle-fill text-danger';
+    toast.innerHTML = `<i class="bi ${icon}"></i><span class="toast-msg">${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        setTimeout(() => toast.remove(), 300);
+    }, 6000);
+}
+
+// ============================================================
+// REFERRAL INPUT HANDLER
+// ============================================================
+document.getElementById('regRef').addEventListener('input', function() {
     const val = this.value.trim();
     if (val) {
-        referralNotice.className = 'referral-notice active';
-        referralNoticeText.textContent = '📌 Referral code: ' + val;
+        document.getElementById('referralNoticeText').textContent = '📌 Referral code: ' + val;
+        document.getElementById('referralNotice').className = 'referral-notice active';
     } else {
-        referralNotice.className = 'referral-notice';
-        referralNoticeText.textContent = 'Enter referrer\'s User ID if you have one';
+        document.getElementById('referralNoticeText').textContent = 'Enter referrer\'s User ID if you have one';
+        document.getElementById('referralNotice').className = 'referral-notice';
     }
 });
 
 // ============================================================
-// 🔥 TOAST FUNCTION
+// VALIDATE REFERRAL CODE USING INDEX
 // ============================================================
-function showToast(message, type = 'success') {
-    if (!toastContainer) {
-        console.error('Toast container not found');
-        return;
-    }
-    
-    const toast = document.createElement('div');
-    toast.className = `toast-custom ${type}`;
-    
-    const icons = {
-        success: 'bi-check-circle-fill text-success',
-        error: 'bi-exclamation-triangle-fill text-danger',
-        warning: 'bi-exclamation-triangle-fill text-warning',
-        info: 'bi-info-circle-fill text-info'
-    };
-    
-    const icon = icons[type] || icons.info;
-    
-    toast.innerHTML = `
-        <i class="bi ${icon}"></i>
-        <span class="toast-msg">${message}</span>
-    `;
-    
-    toastContainer.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.remove();
-            }
-        }, 300);
-    }, 5000);
-}
-
-// ============================================================
-// 🔥 SET LOADING STATE
-// ============================================================
-function setLoading(isLoading) {
-    if (!registerBtn) return;
-    if (isLoading) {
-        registerBtn.disabled = true;
-        registerBtn.innerHTML = `
-            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-            Creating Account...
-        `;
-    } else {
-        registerBtn.disabled = false;
-        registerBtn.innerHTML = 'Create Account <i class="bi bi-arrow-right ms-2"></i>';
+async function validateReferralCode(referralCode) {
+    try {
+        const refSnap = await get(ref(db, 'referralIndex/' + referralCode));
+        if (refSnap.exists()) {
+            const data = refSnap.val();
+            return data.uid || data; // Support both old and new format
+        }
+        return null;
+    } catch (error) {
+        console.error('Error validating referral code:', error);
+        return null;
     }
 }
 
 // ============================================================
-// 🔥 UPDATE REFERRER (LEVEL 1 ONLY)
+// UPDATE REFERRER (With teamStructure.level1)
 // ============================================================
 async function updateReferrer(referralCode, newUserUid, newUserName) {
     try {
-        console.log('🔄 Updating referrer with code:', referralCode);
-        
-        // ✅ Verify referral (direct path - referralCode is UID)
-        const refResult = await verifyReferral(referralCode);
-        if (!refResult.valid) {
-            console.log('ℹ️ Referrer not found - skipping referral update');
-            return { success: false, error: refResult.error };
+        // Get referrer UID from index
+        const referrerUid = await validateReferralCode(referralCode);
+        if (!referrerUid) {
+            console.log('❌ Referrer not found');
+            return;
         }
-        
-        const referrerUid = refResult.uid;
-        const referrerData = refResult.user;
-        
-        // ✅ Update referrer using transaction
-        const referrerRef = ref(database, 'users/' + referrerUid);
-        
-        const result = await runTransaction(referrerRef, (currentData) => {
-            if (!currentData) return currentData;
-            
-            // ✅ Add to direct referrals
-            const directRefs = currentData.directReferrals || {};
-            if (!directRefs[newUserUid]) {
-                directRefs[newUserUid] = {
-                    uid: newUserUid,
-                    name: newUserName,
-                    joinedAt: serverTimestamp()
-                };
-            }
-            
-            // ✅ Update team structure level 1
-            const ts = currentData.teamStructure || { 
-                level1: 0, level2: 0, level3: 0, level4: 0, level5: 0 
-            };
-            ts.level1 = (ts.level1 || 0) + 1;
-            
-            currentData.totalReferrals = (currentData.totalReferrals || 0) + 1;
-            currentData.downline = (currentData.downline || 0) + 1;
-            currentData.directReferrals = directRefs;
-            currentData.teamStructure = ts;
-            
-            return currentData;
+
+        console.log('✅ Referrer found:', referrerUid);
+
+        // Get referrer data
+        const referrerSnap = await get(ref(db, 'users/' + referrerUid));
+        if (!referrerSnap.exists()) {
+            console.log('❌ Referrer data not found');
+            return;
+        }
+        const referrerData = referrerSnap.val();
+
+        // Update direct referrals
+        const directRefs = referrerData.directReferrals || {};
+        directRefs[newUserUid] = {
+            uid: newUserUid,
+            name: newUserName,
+            joinedAt: Date.now()
+        };
+
+        // Update teamStructure
+        const teamStructure = referrerData.teamStructure || {
+            level1: 0,
+            level2: 0,
+            level3: 0,
+            level4: 0,
+            level5: 0
+        };
+        teamStructure.level1 = (teamStructure.level1 || 0) + 1;
+
+        // Update referrer
+        await update(ref(db, 'users/' + referrerUid), {
+            totalReferrals: (referrerData.totalReferrals || 0) + 1,
+            downline: (referrerData.downline || 0) + 1,
+            directReferrals: directRefs,
+            teamStructure: teamStructure
         });
-        
-        if (result.committed) {
-            console.log('✅ Referrer updated successfully');
-            
-            // ✅ Create backup for referrer
-            await createBackup(referrerUid, 'referral_commission', {
-                newReferral: newUserUid,
-                newReferralName: newUserName
-            });
-            
-            // ✅ Create transaction for referrer
-            await createTransaction(referrerUid, 'referral', {
-                type: 'new_referral',
-                referralUid: newUserUid,
-                referralName: newUserName,
-                totalReferrals: (referrerData.totalReferrals || 0) + 1
-            });
-            
-            return { success: true };
-        }
-        
-        return { success: false, error: 'Transaction not committed' };
-        
+
+        console.log('✅ Referrer updated successfully!');
+        console.log('   - totalReferrals:', (referrerData.totalReferrals || 0) + 1);
+        console.log('   - downline:', (referrerData.downline || 0) + 1);
+        console.log('   - teamStructure.level1:', teamStructure.level1);
+
     } catch (error) {
         console.error('❌ Error updating referrer:', error);
-        return { success: false, error: error.message };
     }
 }
 
 // ============================================================
-// 🔥 REGISTER USER
+// EMAIL REGISTRATION - FINAL
 // ============================================================
-async function registerUser(event) {
-    event.preventDefault();
-    
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const pass = document.getElementById('regPassword').value;
+    const refCode = document.getElementById('regRef').value.trim();
+    const registerBtn = document.getElementById('registerBtn');
+
     // ============================================================
-    // STEP 1: GET FORM VALUES
+    // VALIDATION
     // ============================================================
-    const name = nameInput.value.trim();
-    const email = emailInput.value.trim();
-    const password = passwordInput.value;
-    const confirmPassword = confirmPasswordInput.value;
-    const refCode = referralInput.value.trim();
-    
-    console.log('📝 Registration started for:', email);
-    
-    // ============================================================
-    // STEP 2: VALIDATE FORM
-    // ============================================================
-    
-    // Validate Name
-    const nameValidation = validateName(name);
-    if (!nameValidation.valid) {
-        showToast('❌ ' + nameValidation.message, 'error');
-        nameInput.focus();
+    if (!name || name.length < 2) {
+        showToast('❌ Please enter your full name', 'error');
         return;
     }
-    
-    // Validate Email
-    const emailValidation = validateEmail(email);
-    if (!emailValidation.valid) {
-        showToast('❌ ' + emailValidation.message, 'error');
-        emailInput.focus();
+    if (!email || !email.includes('@')) {
+        showToast('❌ Please enter a valid email address', 'error');
         return;
     }
-    
-    // Validate Password
-    const passwordValidation = validatePassword(password);
-    if (!passwordValidation.valid) {
-        showToast('❌ ' + passwordValidation.message, 'error');
-        passwordInput.focus();
+    if (pass.length < 6) {
+        showToast('❌ Password must be at least 6 characters long!', 'error');
         return;
     }
-    
-    // Validate Password Match
-    const matchValidation = validatePasswordMatch(password, confirmPassword);
-    if (!matchValidation.valid) {
-        showToast('❌ ' + matchValidation.message, 'error');
-        confirmPasswordInput.focus();
-        return;
+
+    // Validate referral code if provided
+    if (refCode) {
+        const referrerUid = await validateReferralCode(refCode);
+        if (!referrerUid) {
+            showToast('❌ Invalid referral code. Please check and try again.', 'error');
+            return;
+        }
+        console.log('✅ Referral code validated:', refCode, '→', referrerUid);
     }
-    
-    // ============================================================
-    // STEP 3: CHECK USERNAME AVAILABILITY
-    // ============================================================
-    const username = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-    const availability = await isUsernameAvailable(username);
-    if (!availability.available) {
-        showToast('❌ Username "' + username + '" is already taken. Please try another email.', 'error');
-        emailInput.focus();
-        return;
-    }
-    
-    // ============================================================
-    // STEP 4: DISABLE BUTTON & SHOW LOADING
-    // ============================================================
-    setLoading(true);
-    
+
+    registerBtn.disabled = true;
+    registerBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+
     try {
         // ============================================================
-        // STEP 5: CREATE USER IN FIREBASE AUTH
+        // STEP 1: Create user in Firebase Auth
         // ============================================================
-        console.log('🔐 Creating Firebase Auth user...');
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        const uid = user.uid;
-        
-        console.log('✅ Auth user created. UID:', uid);
-        
-        // Update profile
-        await updateProfile(user, { displayName: name });
-        
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        const uid = cred.user.uid;
+        await updateProfile(auth.currentUser, { displayName: name });
+        console.log('✅ User created with UID:', uid);
+
         // ============================================================
-        // STEP 6: DETERMINE REFERRAL CODE
+        // STEP 2: Final referral code
         // ============================================================
-        // ✅ Referral Code = Firebase Auth UID
-        const referralCode = uid;
         const finalRefCode = refCode || referralCodeFromURL || '';
-        
-        console.log('📌 Referral Code:', referralCode);
-        console.log('📌 Referred By:', finalRefCode || 'None');
-        
+
         // ============================================================
-        // STEP 7: SAVE USER DATA TO DATABASE
+        // STEP 3: USER DATA (COMPLETE - Dashboard Ready)
         // ============================================================
-        console.log('💾 Saving user data to database...');
-        
-        const timestamp = getCurrentTimestamp();
-        const date = getCurrentDate();
-        
         const userData = {
+            // Basic Info
             uid: uid,
+            username: uid,
             name: name,
             email: email,
-            username: username,
-            referralCode: referralCode,
-            referredBy: finalRefCode || '',
-            rank: 'Member',
+            referralCode: uid,
+            referredBy: finalRefCode,
             role: 'user',
+            rank: 'Member',
             status: 'active',
-            createdAt: timestamp,
-            lastLogin: timestamp,
-            depositWallet: 0,
-            referralWallet: 0,
-            rndWallet: 0,
-            lockedRND: 0,
-            releaseWallet: 0,
-            totalReleased: 0,
-            totalStake: 0,
+            banned: false,
+            createdAt: Date.now(),
+            lastLogin: Date.now(),
+            
+            // Wallets
+            wallets: {
+                deposit: 0,
+                reward: 0,
+                release: 0,
+                referral: 0,
+                rnd: 0,
+                lockedRND: 0
+            },
+            
+            // Referral System
             totalReferrals: 0,
             downline: 0,
-            teamBusiness: 0,
-            teamStructure: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0 },
+            teamStructure: {
+                level1: 0,
+                level2: 0,
+                level3: 0,
+                level4: 0,
+                level5: 0
+            },
             directReferrals: {},
+            
+            // Packages & Investments
             packages: {},
-            transactions: {},
-            transferHistory: [],
-            commissionHistory: [],
+            totalStake: 0,
+            teamBusiness: 0,
+            
+            // Earnings
+            referralEarnings: 0,
             level1Earnings: 0,
             level2Earnings: 0,
             level3Earnings: 0,
             level4Earnings: 0,
             level5Earnings: 0,
-            referralEarnings: 0
+            totalReward: 0,
+            totalReleased: 0,
+            totalWithdrawn: 0,
+            
+            // History
+            transactions: {},
+            transferHistory: {},
+            commissionHistory: {}
         };
+
+        console.log('💾 Saving user data...');
+
+        // ============================================================
+        // STEP 4: Save to database
+        // ============================================================
         
-        // ✅ Save user with indexes
-        const saveResult = await saveUserWithIndexes(uid, userData);
-        if (!saveResult.success) {
-            throw new Error(saveResult.error || 'Failed to save user data');
-        }
-        
-        console.log('✅ User data saved to database');
-        
-        // ============================================================
-        // STEP 8: CREATE BACKUP
-        // ============================================================
-        await createBackup(uid, 'registration', {
-            name: name,
-            email: email,
-            username: username,
-            referralCode: referralCode,
-            referredBy: finalRefCode
-        });
-        
-        // ============================================================
-        // STEP 9: CREATE WELCOME TRANSACTION
-        // ============================================================
-        await createTransaction(uid, 'registration', {
-            name: name,
-            email: email,
-            referralCode: referralCode,
-            referredBy: finalRefCode || 'None'
-        });
-        
-        // ============================================================
-        // STEP 10: UPDATE REFERRER (IF REFERRAL EXISTS)
-        // ============================================================
-        if (finalRefCode) {
-            console.log('🔗 Updating referrer...');
-            try {
-                const refUpdateResult = await updateReferrer(finalRefCode, uid, name);
-                if (refUpdateResult.success) {
-                    console.log('✅ Referrer updated successfully');
-                } else {
-                    console.log('⚠️ Referrer update skipped:', refUpdateResult.error);
-                }
-            } catch (refError) {
-                console.error('⚠️ Referral update failed:', refError);
-                // ✅ Registration continues even if referral update fails
-            }
-        } else {
-            console.log('ℹ️ No referral code provided');
-        }
-        
-        // ============================================================
-        // STEP 11: CREATE LOG
-        // ============================================================
-        await createLog('info', 'New user registered', {
+        // 4a: Save user data
+        await set(ref(db, 'users/' + uid), userData);
+        console.log('✅ User data saved');
+
+        // 4b: Save to username index
+        await set(ref(db, 'usernames/' + uid), {
             uid: uid,
             name: name,
             email: email,
-            username: username,
-            referredBy: finalRefCode || 'None'
+            createdAt: Date.now()
         });
-        
-        // ============================================================
-        // STEP 12: SUCCESS
-        // ============================================================
-        console.log('✅ Registration completed successfully');
-        showToast('🎉 Account created successfully! Welcome ' + name + '!', 'success');
-        
-        // Reset form
-        form.reset();
-        referralNotice.className = 'referral-notice';
-        referralNoticeText.textContent = 'Enter referrer\'s User ID if you have one';
-        
-        // ============================================================
-        // STEP 13: REDIRECT TO DASHBOARD
-        // ============================================================
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 2000);
-        
-    } catch (error) {
-        // ============================================================
-        // STEP 14: ERROR HANDLING
-        // ============================================================
-        console.error('❌ Registration Error:', error);
-        
-        let errorMessage = 'Registration failed. Please try again.';
-        
-        switch (error.code) {
-            case 'auth/email-already-in-use':
-                errorMessage = '❌ This email is already registered. Please login.';
-                break;
-            case 'auth/weak-password':
-                errorMessage = '❌ Password must be at least 6 characters.';
-                break;
-            case 'auth/invalid-email':
-                errorMessage = '❌ Please enter a valid email address.';
-                break;
-            case 'auth/too-many-requests':
-                errorMessage = '❌ Too many attempts. Please try again later.';
-                break;
-            case 'auth/network-request-failed':
-                errorMessage = '❌ Network error. Please check your connection.';
-                break;
-            case 'auth/internal-error':
-                errorMessage = '❌ Internal error. Please try again.';
-                break;
-            default:
-                errorMessage = '❌ ' + (error.message || 'Registration failed. Please try again.');
-        }
-        
-        showToast(errorMessage, 'error');
-        
-        // ✅ Create error log
-        await createLog('error', 'Registration failed', {
+        console.log('✅ Username index saved');
+
+        // 4c: Save to referral index (with createdAt)
+        await set(ref(db, 'referralIndex/' + uid), {
+            uid: uid,
+            createdAt: Date.now()
+        });
+        console.log('✅ Referral index saved');
+
+        // 4d: Save to email index (for fast login)
+        const emailKey = email.replace(/[.#$\/\[\]]/g, '_');
+        await set(ref(db, 'emailIndex/' + emailKey), {
+            uid: uid,
             email: email,
-            errorCode: error.code,
-            errorMessage: error.message
+            createdAt: Date.now()
         });
-        
-    } finally {
+        console.log('✅ Email index saved');
+
         // ============================================================
-        // STEP 15: RE-ENABLE BUTTON
+        // STEP 5: UPDATE REFERRER
         // ============================================================
-        setLoading(false);
+        if (finalRefCode) {
+            console.log('🔗 Updating referrer...');
+            await updateReferrer(finalRefCode, uid, name);
+        } else {
+            console.log('ℹ️ No referral code provided');
+        }
+
+        // ============================================================
+        // STEP 6: Update lastLogin
+        // ============================================================
+        await update(ref(db, 'users/' + uid), {
+            lastLogin: Date.now()
+        });
+
+        // ============================================================
+        // STEP 7: Save to localStorage
+        // ============================================================
+        localStorage.setItem('uid', uid);
+        localStorage.setItem('userId', uid);
+        localStorage.setItem('userName', name);
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('loggedIn', 'true');
+        console.log('✅ LocalStorage updated');
+
+        // ============================================================
+        // STEP 8: Success
+        // ============================================================
+        showToast('✅ Account created successfully! Welcome ' + name + '!', 'success');
+
+        // Redirect to dashboard
+        window.location.href = 'dashboard.html';
+
+    } catch (err) {
+        console.error('❌ Registration Error:', err);
+        let msg = 'Registration failed. Please try again.';
+        if (err.code === 'auth/email-already-in-use') {
+            msg = '❌ This email is already registered.';
+        } else if (err.code === 'auth/weak-password') {
+            msg = '❌ Password must be at least 6 characters.';
+        } else if (err.code === 'auth/invalid-email') {
+            msg = '❌ Please enter a valid email address.';
+        } else if (err.code === 'auth/network-request-failed') {
+            msg = '❌ Network error. Please check your connection.';
+        }
+        showToast(msg, 'error');
     }
-}
+
+    registerBtn.disabled = false;
+    registerBtn.innerHTML = 'Create Account <i class="bi bi-arrow-right ms-2"></i>';
+});
 
 // ============================================================
-// 🔥 FORM SUBMIT LISTENER
-// ============================================================
-if (form) {
-    form.addEventListener('submit', registerUser);
-}
-
-// ============================================================
-// 🔥 AUTH STATE LISTENER (Redirect if already logged in)
+// CHECK IF USER IS ALREADY LOGGED IN
 // ============================================================
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        console.log('👤 User already logged in:', user.uid);
-        // Uncomment to redirect if already logged in
-        // window.location.href = 'dashboard.html';
+        console.log('ℹ️ User already logged in, redirecting to dashboard');
+        window.location.href = 'dashboard.html';
     }
 });
-
-// ============================================================
-// 🔥 KEYBOARD SHORTCUT: Enter to Submit
-// ============================================================
-document.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && event.target.tagName === 'INPUT') {
-        const form = event.target.closest('form');
-        if (form && form.id === 'registerForm') {
-            event.preventDefault();
-            form.dispatchEvent(new Event('submit'));
-        }
-    }
-});
-
-// ============================================================
-// 🔥 INIT LOG
-// ============================================================
-console.log('✅ Register module loaded successfully');
-console.log('📌 Project: mywebsite-600d3');
-console.log('📌 Phase: 1 - Registration Module');
-console.log('📌 Rule: Firebase Auth UID = User ID = Referral Code');
